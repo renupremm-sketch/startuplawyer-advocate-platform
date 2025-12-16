@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, History, Download, Eye, Plus, CheckCircle, UploadCloud, Search, ShieldAlert, MessageSquare } from 'lucide-react';
+import { FileText, History, Download, Eye, Plus, CheckCircle, UploadCloud, ShieldAlert, MessageSquare, X } from 'lucide-react';
 
 const Agreements = () => {
     const navigate = useNavigate();
@@ -10,6 +10,7 @@ const Agreements = () => {
     const [isScanning, setIsScanning] = useState(false);
     const [chatMessages, setChatMessages] = useState([]);
     const [chatInput, setChatInput] = useState('');
+    const [summaryModal, setSummaryModal] = useState(null);
 
     const fileInputRef = React.useRef(null);
 
@@ -23,7 +24,6 @@ const Agreements = () => {
         setChatMessages([...chatMessages, newMsg]);
         setChatInput('');
 
-        // Sim response
         setTimeout(() => {
             setChatMessages(prev => [...prev, { role: 'ai', text: "Based on the agreement, the termination clause requires a 30-day notice period. However, it does not specify penalties for early termination." }]);
         }, 1000);
@@ -37,6 +37,18 @@ const Agreements = () => {
         alert(`Downloading ${doc.title}...\n(Simulated Download in Demo Mode)`);
     };
 
+    const handleViewSummary = (doc) => {
+        // Mock Summaries
+        let summaryText = "";
+        switch (doc.id) {
+            case 'AG-2024-001': summaryText = "Mutual Non-Disclosure Agreement between TechCorp and Client to protect proprietary algorithms. Includes 3-year confidentiality term post-expiry. No penalty clause defined for minor breaches."; break;
+            case 'AG-2024-002': summaryText = "Commercial Lease Deed for Office Unit 504. Monthly rent: ₹1.5L. Security Deposit: 6 Months. Lock-in period: 3 Years. Force Majeure clause included."; break;
+            case 'AG-2023-089': summaryText = "Shareholders Agreement defining equity split (60-40). Includes Right of First Refusal (ROFR) and Tag-Along rights. Board composition: 2 Directors from Majority, 1 from Minority."; break;
+            default: summaryText = "Standard agreement template with basic liability protections and dispute resolution via arbitration in New Delhi.";
+        }
+        setSummaryModal({ title: doc.title, text: summaryText });
+    };
+
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -46,7 +58,6 @@ const Agreements = () => {
         setAnalysisResult(null);
         setChatMessages([]);
 
-        // Simulate AI Processing
         setTimeout(() => {
             setIsScanning(false);
             setAnalysisResult({
@@ -86,16 +97,8 @@ const Agreements = () => {
                 </div>
             </header>
 
-            {/* Hidden Input for Real File Picking */}
-            <input
-                type="file"
-                ref={fileInputRef}
-                style={{ display: 'none' }}
-                accept=".pdf,.docx,.doc"
-                onChange={handleFileChange}
-            />
+            <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept=".pdf,.docx,.doc" onChange={handleFileChange} />
 
-            {/* Tabs */}
             <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', marginBottom: '2rem' }}>
                 <div onClick={() => setActiveTab('drafts')} style={{ padding: '1rem 2rem', cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-sans)', borderBottom: activeTab === 'drafts' ? '3px solid var(--color-navy)' : 'none', color: activeTab === 'drafts' ? 'var(--color-navy)' : '#64748b' }}>
                     Active Drafts
@@ -231,7 +234,6 @@ const Agreements = () => {
                                 <th style={{ padding: '1rem' }}>Agreement Title</th>
                                 <th style={{ padding: '1rem' }}>Client</th>
                                 <th style={{ padding: '1rem' }}>Last Updated</th>
-                                <th style={{ padding: '1rem' }}>Version</th>
                                 <th style={{ padding: '1rem' }}>Status</th>
                                 <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
                             </tr>
@@ -249,11 +251,6 @@ const Agreements = () => {
                                     <td style={{ padding: '1rem', color: '#333' }}>{doc.client}</td>
                                     <td style={{ padding: '1rem', color: '#64748b' }}>{doc.updated}</td>
                                     <td style={{ padding: '1rem' }}>
-                                        <span style={{ backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600, color: '#475569' }}>
-                                            {doc.version}
-                                        </span>
-                                    </td>
-                                    <td style={{ padding: '1rem' }}>
                                         <span style={{
                                             backgroundColor: doc.status === 'Executed' ? '#ecfdf5' : '#fff7ed',
                                             color: doc.status === 'Executed' ? '#047857' : '#c2410c',
@@ -264,7 +261,7 @@ const Agreements = () => {
                                     </td>
                                     <td style={{ padding: '1rem', textAlign: 'right' }}>
                                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                                            <button onClick={() => alert('Opening Version History Log...')} className="btn" style={{ padding: '0.4rem', color: '#64748b' }} title="View Version History"><History size={16} /></button>
+                                            <button onClick={() => handleViewSummary(doc)} className="btn" style={{ padding: '0.4rem', color: '#0369a1', backgroundColor: '#e0f2fe' }} title="AI Summary"><FileText size={16} /></button>
                                             <button onClick={() => handlePreview(doc)} className="btn" style={{ padding: '0.4rem', color: '#64748b' }} title="Preview"><Eye size={16} /></button>
                                             <button onClick={() => handleDownload(doc)} className="btn" style={{ padding: '0.4rem', color: '#64748b' }} title="Download"><Download size={16} /></button>
                                         </div>
@@ -276,7 +273,6 @@ const Agreements = () => {
                 </div>
             )}
 
-            {/* Version Control Alert Sim */}
             {activeTab !== 'review' && (
                 <div style={{ marginTop: '2rem', maxWidth: '600px' }}>
                     <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '4px', padding: '1rem', display: 'flex', gap: '1rem' }}>
@@ -285,12 +281,29 @@ const Agreements = () => {
                             <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.95rem', color: '#1e40af' }}>Version Control Active</h4>
                             <p style={{ margin: 0, fontSize: '0.85rem', color: '#1e3a8a', lineHeight: '1.5' }}>
                                 Every edit made to an agreement is tracked with timestamp and user ID.
-                                Use the "History" button to revert to previous versions or compare changes (Delta View).
                             </p>
                         </div>
                     </div>
                 </div>
             )}
+
+            {/* AI Summary Modal */}
+            {summaryModal && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+                    <div className="paper" style={{ width: '500px', padding: '2rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                            <h2 style={{ margin: 0, fontSize: '1.4rem' }}>{summaryModal.title}</h2>
+                            <button onClick={() => setSummaryModal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+                        </div>
+                        <div style={{ backgroundColor: '#f9f9f9', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid var(--color-navy)' }}>
+                            <h4 style={{ marginTop: 0, color: 'var(--color-navy)', display: 'flex', alignItems: 'center' }}><FileText size={16} style={{ marginRight: '8px' }} /> AI Generated Summary</h4>
+                            <p style={{ lineHeight: '1.6', color: '#333', fontSize: '0.95rem' }}>{summaryModal.text}</p>
+                        </div>
+                        <button onClick={() => setSummaryModal(null)} className="btn btn-primary" style={{ marginTop: '1.5rem', width: '100%' }}>Close</button>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 };
