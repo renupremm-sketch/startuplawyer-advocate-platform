@@ -628,10 +628,11 @@ ${JSON.stringify(formData, null, 2)}
                                 border: '1px solid #e2e8f0',
                                 borderRadius: '8px',
                                 fontSize: '0.95rem',
-                                fontFamily: 'monospace',
+                                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", "Roboto", "Helvetica Neue", Arial, sans-serif',
                                 lineHeight: '1.8',
                                 outline: 'none',
-                                resize: 'vertical'
+                                resize: 'vertical',
+                                color: '#1f2937'
                             }}
                         />
 
