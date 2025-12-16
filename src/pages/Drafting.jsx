@@ -1,27 +1,52 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Search, Book, Briefcase, Scale, Building, ChevronRight, Star } from 'lucide-react';
+import { FileText, Search, Book, Briefcase, Scale, Building, ChevronRight, Star, Users, Lightbulb } from 'lucide-react';
 
 const Drafting = () => {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('All');
 
     const templates = [
+        // CORPORATE / STARTUP
         { id: 1, title: 'Non-Disclosure Agreement (Mutual)', category: 'Corporate', popular: true, desc: 'Standard mutual NDA for business discussions.' },
+        { id: 3, title: 'Employment Agreement', category: 'Corporate', popular: false, desc: 'Comprehensive contract for full-time employees including non-compete.' },
+        { id: 6, title: 'Freelance Service Contract', category: 'Corporate', popular: false, desc: 'Contract for independent contractors/consultants with IP assignment.' },
+        { id: 8, title: 'Shareholders Agreement', category: 'Corporate', popular: false, desc: 'Defines rights, duties, and exit options for shareholders.' },
+        { id: 9, title: 'Founders Agreement', category: 'Corporate', popular: true, desc: 'Pre-incorporation agreement defining equity split and vesting.' },
+        { id: 10, title: 'Term Sheet (Seed Round)', category: 'Corporate', popular: true, desc: 'Standard investment term sheet for early-stage startups.' },
+        { id: 11, title: 'ESOP Plan 2024', category: 'Corporate', popular: false, desc: 'Employee Stock Option Plan scheme document.' },
+        { id: 12, title: 'Board Resolution Format', category: 'Corporate', popular: false, desc: 'Standard format for passing board resolutions.' },
+
+        // CRIMINAL / LITIGATION
         { id: 2, title: 'Bail Application u/s 439 CrPC', category: 'Criminal', popular: true, desc: 'Regular bail application for non-bailable offences.' },
-        { id: 3, title: 'Employment Agreement', category: 'Corporate', popular: false, desc: 'Comprehensive contract for full-time employees.' },
-        { id: 4, title: 'Commercial Lease Deed', category: 'Real Estate', popular: false, desc: 'Lease agreement for office or retail space.' },
+        { id: 13, title: 'Complaint u/s 138 NI Act', category: 'Criminal', popular: true, desc: 'Complaint for Cheque Bounce cases.' },
+        { id: 14, title: 'Quashing Petition (Section 482)', category: 'Criminal', popular: false, desc: 'Petition to High Court for quashing FIR.' },
+        { id: 15, title: 'Exemption Application (205 CrPC)', category: 'Criminal', popular: false, desc: 'Application for personal exemption of accused.' },
+
+        // CIVIL / APPELLATE
         { id: 5, title: 'Writ Petition (Civil)', category: 'Appellate', popular: true, desc: 'Article 226 petition against arbitrary state action.' },
-        { id: 6, title: 'Freelance Service Contract', category: 'Corporate', popular: false, desc: 'Contract for independent contractors/consultants.' },
-        { id: 7, title: 'Legal Notice (Recovery)', category: 'Civil', popular: false, desc: 'Notice for recovery of dues under CPC.' },
-        { id: 8, title: 'Shareholders Agreement', category: 'Corporate', popular: false, desc: 'Defining rights/obligations of shareholders.' },
+        { id: 7, title: 'Legal Notice (Recovery)', category: 'Civil', popular: true, desc: 'Formal demand notice for recovery of dues.' },
+        { id: 16, title: 'Suit for Specific Performance', category: 'Civil', popular: false, desc: 'Civil suit to enforce contract performance.' },
+        { id: 17, title: 'Consumer Complaint', category: 'Civil', popular: false, desc: 'Complaint before District Consumer Commission.' },
+
+        // REAL ESTATE
+        { id: 4, title: 'Commercial Lease Deed', category: 'Real Estate', popular: false, desc: 'Lease agreement for office or retail space.' },
+        { id: 18, title: 'Sale Deed (Immovable Property)', category: 'Real Estate', popular: false, desc: 'Transfer of ownership for land/flat.' },
+        { id: 19, title: 'General Power of Attorney', category: 'Real Estate', popular: false, desc: 'Authorizing agent for property management.' },
+
+        // IPR
+        { id: 20, title: 'Trademark Assignment Deed', category: 'IPR', popular: false, desc: 'Transfer of trademark rights.' },
+        { id: 21, title: 'Cease & Desist Notice (Copyright)', category: 'IPR', popular: false, desc: 'Notice to stop copyright infringement.' },
     ];
 
-    const filteredTemplates = templates.filter(t => t.title.toLowerCase().includes(searchTerm.toLowerCase()));
+    const filteredTemplates = templates.filter(t =>
+        (selectedCategory === 'All' || t.category === selectedCategory) &&
+        (t.title.toLowerCase().includes(searchTerm.toLowerCase()) || t.category.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
 
     const handleUseTemplate = (title) => {
-        // In a real app, we'd pass the template ID/content to the editor
-        // For demo, we just navigate
+        // Navigate with state (simulated)
         navigate('/smart-draft');
     };
 
@@ -31,14 +56,14 @@ const Drafting = () => {
                 <div>
                     <h1 style={{ fontSize: '2rem', color: 'var(--color-navy)', marginBottom: '0.5rem' }}>Template Library</h1>
                     <p style={{ fontFamily: 'var(--font-sans)', color: 'var(--color-text-secondary)' }}>
-                        Over 200+ vetted legal templates for every practice area.
+                        Over 500+ vetted legal templates for every practice area.
                     </p>
                 </div>
                 <div style={{ position: 'relative', width: '300px' }}>
                     <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                     <input
                         type="text"
-                        placeholder="Search templates..."
+                        placeholder="Search templates (e.g. 'Bail', 'NDA')..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 2.5rem', borderRadius: '8px', border: '1px solid #ccc', outline: 'none' }}
@@ -48,8 +73,19 @@ const Drafting = () => {
 
             {/* Categories */}
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
-                {['All', 'Corporate', 'Civil', 'Criminal', 'Real Estate', 'Appellate'].map((cat, i) => (
-                    <button key={i} className="btn" style={{ backgroundColor: i === 0 ? 'var(--color-navy)' : 'white', color: i === 0 ? 'white' : '#64748b', border: '1px solid #e2e8f0', minWidth: 'auto' }}>
+                {['All', 'Corporate', 'Criminal', 'Civil', 'Real Estate', 'Appellate', 'IPR'].map((cat, i) => (
+                    <button
+                        key={i}
+                        onClick={() => setSelectedCategory(cat)}
+                        className="btn"
+                        style={{
+                            backgroundColor: selectedCategory === cat ? 'var(--color-navy)' : 'white',
+                            color: selectedCategory === cat ? 'white' : '#64748b',
+                            border: '1px solid #e2e8f0',
+                            minWidth: 'auto',
+                            transition: 'all 0.2s'
+                        }}
+                    >
                         {cat}
                     </button>
                 ))}
@@ -70,6 +106,7 @@ const Drafting = () => {
                                 {t.category === 'Real Estate' && <Building size={20} />}
                                 {t.category === 'Civil' && <FileText size={20} />}
                                 {t.category === 'Appellate' && <Book size={20} />}
+                                {t.category === 'IPR' && <Lightbulb size={20} />}
                             </div>
                             {t.popular && (
                                 <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#d97706', backgroundColor: '#fef3c7', padding: '2px 8px', borderRadius: '12px', display: 'flex', alignItems: 'center' }}>
@@ -90,7 +127,7 @@ const Drafting = () => {
             {filteredTemplates.length === 0 && (
                 <div style={{ textAlign: 'center', padding: '4rem', color: '#94a3b8' }}>
                     <Search size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                    <p>No templates found matching "{searchTerm}"</p>
+                    <p>No templates found matching "{searchTerm}" in {selectedCategory}</p>
                 </div>
             )}
         </div>
