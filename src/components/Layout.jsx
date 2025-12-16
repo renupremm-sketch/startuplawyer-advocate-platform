@@ -9,6 +9,7 @@ const Layout = ({ children }) => {
 
   // Modernized Access List
   const navItems = [
+    { label: 'Home', path: '/', icon: LayoutDashboard },
     { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { label: 'Case Diary', path: '/case-diary', icon: BookOpen },
     { label: 'AI Drafting', path: '/smart-draft', icon: PenTool },
@@ -35,7 +36,7 @@ const Layout = ({ children }) => {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '3rem' }}>
           {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
             <div style={{ width: '36px', height: '36px', background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
               <Scale size={20} />
             </div>
@@ -43,7 +44,7 @@ const Layout = ({ children }) => {
               <h1 style={{ fontSize: '1.2rem', margin: 0, lineHeight: 1, letterSpacing: '-0.5px', color: 'var(--color-primary)' }}>Lex<span style={{ color: 'var(--color-accent)' }}>Mind</span></h1>
               <span style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', letterSpacing: '1px' }}>AI ADVOCATE</span>
             </div>
-          </div>
+          </Link>
 
           {/* Desktop Links */}
           <div style={{ display: 'flex', gap: '0.5rem', display: window.innerWidth < 1000 ? 'none' : 'flex' }}>
