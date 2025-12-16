@@ -14,6 +14,7 @@ import Ethics from './pages/Ethics';
 import Evidence from './pages/Evidence';
 import AIConfig from './pages/AIConfig';
 import Agreements from './pages/Agreements';
+import Review from './pages/Review';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           <Route path="/evidence" element={<Evidence />} />
           <Route path="/ai-config" element={<AIConfig />} />
           <Route path="/agreements" element={<Agreements />} />
+          <Route path="/review" element={<Review />} />
           <Route path="*" element={<div style={{ padding: '2rem' }}><h1>404</h1><p>Page not found.</p></div>} />
         </Routes>
       </Layout>
