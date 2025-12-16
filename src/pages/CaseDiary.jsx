@@ -14,13 +14,34 @@ const CaseDiary = () => {
         stage: 'Admission'
     });
 
-    const fetchCases = () => {
-        fetch('http://localhost:5000/api/cases')
-            .then(res => res.json())
-            .then(data => {
-                if (data.data) setCases(data.data);
-            })
-            .catch(err => console.error("Error fetching cases:", err));
+    // Mock Data for Demo / Fallback
+    const mockCases = [
+        { id: 1, case_number_original: 'WP(C) 142/2024', title: 'Sharma Construction v. DDA', court_name: 'High Court of Delhi', judge_name: 'Hon. Justice Prathiba Singh', notes: 'Argument heard on maintainability. Court directs filing of counter-affidavit within 4 weeks. Next date fixed for final disposal.', current_stage: 'Arguments', next_hearing_date: '2025-01-24' },
+        { id: 2, case_number_original: 'CS(OS) 55/2023', title: 'Global Tech v. Innovate Ltd', court_name: 'High Court of Delhi', judge_name: 'Hon. Justice Sanjeev Narula', notes: 'Witness cross-examination of PW-1 concluded. Plaintiff to summon next witness. Commissioner appointed for recording evidence.', current_stage: 'Evidence', next_hearing_date: '2025-02-10' }
+    ];
+
+    const fetchCases = async () => {
+        try {
+            // Try Production API first
+            const res = await fetch('http://localhost:5000/api/cases');
+            // In a real deployed env, this URL should be your production API.
+            // Since we are likely on Vercel frontend only, this will fail or return 404/Network Error.
+
+            if (!res.ok) throw new Error("API Unreachable");
+
+            const data = await res.json();
+            if (data.data) setCases(data.data);
+        } catch (err) {
+            console.warn("API/Backend unreachable (Demo Mode Active). Using Local Data.");
+            // Fallback to LocalStorage + Mock
+            const localData = localStorage.getItem('demo_cases');
+            if (localData) {
+                setCases(JSON.parse(localData));
+            } else {
+                setCases(mockCases);
+                localStorage.setItem('demo_cases', JSON.stringify(mockCases));
+            }
+        }
     };
 
     useEffect(() => {
@@ -31,21 +52,44 @@ const CaseDiary = () => {
         if (!newCase.case_number || !newCase.title) return alert("Case Number and Title are required.");
 
         try {
+            // Try Production API
             const res = await fetch('http://localhost:5000/api/cases', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newCase)
             });
+
+            if (!res.ok) throw new Error("API Failed");
+
             const result = await res.json();
             if (result.message === 'success') {
-                alert('Case Saved Successfully!');
+                alert('Case Saved Successfully (Server)!');
                 setShowModal(false);
                 setNewCase({ court_name: 'High Court of Delhi', case_number: '', title: '', stage: 'Admission' });
-                fetchCases(); // Refresh list
+                fetchCases();
             }
         } catch (error) {
-            console.error("Error saving case:", error);
-            alert("Failed to save case.");
+            console.warn("Saving to Local Demo Storage (Backend unavailable).");
+
+            // Local Demo Save
+            const currentCases = JSON.parse(localStorage.getItem('demo_cases') || JSON.stringify(mockCases));
+            const newEntry = {
+                id: Date.now(),
+                case_number_original: newCase.case_number,
+                title: newCase.title,
+                court_name: newCase.court_name,
+                current_stage: newCase.stage,
+                notes: 'New case entry created (Demo Mode).',
+                judge_name: 'Pending Allocation'
+            };
+
+            const updatedCases = [newEntry, ...currentCases];
+            localStorage.setItem('demo_cases', JSON.stringify(updatedCases));
+            setCases(updatedCases);
+
+            alert('Case Saved Locally (Demo Mode Only)! Data will persist in this browser.');
+            setShowModal(false);
+            setNewCase({ court_name: 'High Court of Delhi', case_number: '', title: '', stage: 'Admission' });
         }
     };
 
