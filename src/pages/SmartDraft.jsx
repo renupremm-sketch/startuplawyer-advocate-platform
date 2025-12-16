@@ -1,9 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { PenTool, CheckCircle, AlertTriangle, Download, Copy, BookOpen, Wand2, Zap, BarChart3, RefreshCw } from 'lucide-react';
 
 const SmartDraft = () => {
-    const [activeDraft, setActiveDraft] = useState('Bail Application u/s 439 CrPC');
-    const [content, setContent] = useState(`IN THE HIGH COURT OF DELHI AT NEW DELHI
+    const location = useLocation();
+
+    // Check if we received generated content from Agreements page
+    const initialContent = location.state?.generatedAgreement || `IN THE HIGH COURT OF DELHI AT NEW DELHI
 CRIMINAL ORIGINAL JURISDICTION
 BAIL APPLICATION NO. ______ OF 2024
 
@@ -20,7 +23,11 @@ MOST RESPECTFULLY SHOWETH:
 
 2. That the Petitioner was arrested on 15.11.2024 and has been in judicial custody since then.
 
-3. That the investigation is complete and the Charge Sheet has been filed. No fruitful purpose will be served by keeping the Petitioner behind bars.`);
+3. That the investigation is complete and the Charge Sheet has been filed. No fruitful purpose will be served by keeping the Petitioner behind bars.`;
+    const initialTitle = location.state?.agreementType || 'Bail Application u/s 439 CrPC';
+
+    const [activeDraft, setActiveDraft] = useState(initialTitle);
+    const [content, setContent] = useState(initialContent);
 
     const [winProb, setWinProb] = useState(65);
     const contentRef = useRef(null);

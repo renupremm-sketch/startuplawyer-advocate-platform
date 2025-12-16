@@ -41,8 +41,88 @@ const Agreements = () => {
     };
 
     const handleGenerateSubmit = () => {
-        alert(`Generating ${selectedType.title}...\nDetails: ${JSON.stringify(formData, null, 2)}`);
-        navigate('/smart-draft');
+        let generatedContent = '';
+
+        // Generate agreement content based on type
+        if (selectedType.id === 'rental') {
+            generatedContent = `RENTAL AGREEMENT
+
+This Rental Agreement ("Agreement") is entered into on ${new Date().toLocaleDateString('en-IN')} between:
+
+LANDLORD: ${formData.landlordName || '[Landlord Name]'}
+TENANT: ${formData.tenantName || '[Tenant Name]'}
+
+PROPERTY DETAILS:
+Address: ${formData.propertyAddress || '[Property Address]'}
+
+TERMS:
+1. Monthly Rent: ₹${formData.monthlyRent || '[Amount]'}
+2. Security Deposit: ₹${formData.securityDeposit || '[Amount]'}
+3. Lease Period: 11 Months (Standard)
+4. Governing Law: ${formData.state || '[State]'} Rent Control Act
+
+OBLIGATIONS:
+- Tenant shall maintain the property in good condition
+- Landlord shall ensure basic amenities are functional
+- Rent payable on 1st of every month
+
+TERMINATION:
+Either party may terminate with 30 days written notice.
+
+Signatures:
+Landlord: _____________    Tenant: _____________`;
+        } else if (selectedType.id === 'employment') {
+            generatedContent = `EMPLOYMENT CONTRACT
+
+This Employment Agreement is made on ${new Date().toLocaleDateString('en-IN')} between:
+
+EMPLOYER: ${formData.employerName || '[Company Name]'}
+EMPLOYEE: ${formData.employeeName || '[Employee Name]'}
+
+POSITION: ${formData.jobTitle || '[Job Title]'}
+SALARY: ₹${formData.monthlySalary || '[Amount]'} per month
+START DATE: ${formData.startDate || '[Date]'}
+WORK LOCATION: ${formData.workLocation || '[Location]'}
+
+TERMS OF EMPLOYMENT:
+1. The Employee agrees to work in the capacity stated above
+2. Working hours: 9 AM to 6 PM, Monday to Friday
+3. Probation period: 3 months from start date
+4. Notice period: 30 days for either party
+
+BENEFITS:
+- Provident Fund as per EPF Act
+- Leave entitlement as per company policy
+- Health insurance coverage
+
+CONFIDENTIALITY:
+Employee shall maintain confidentiality of all proprietary information.
+
+NON-COMPETE:
+Employee agrees not to engage in competing business during employment.
+
+Signatures:
+Employer: _____________    Employee: _____________`;
+        } else {
+            generatedContent = `${selectedType.title.toUpperCase()}
+
+This ${selectedType.title} is entered into on ${new Date().toLocaleDateString('en-IN')}.
+
+[Agreement content will be generated based on your inputs]
+
+${JSON.stringify(formData, null, 2)}
+
+This is a legally binding document. Please review all terms carefully.`;
+        }
+
+        // Navigate to Smart Draft with generated content
+        navigate('/smart-draft', {
+            state: {
+                generatedAgreement: generatedContent,
+                agreementType: selectedType.title,
+                formData: formData
+            }
+        });
     };
 
     const onUploadClick = () => {
