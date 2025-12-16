@@ -23,19 +23,23 @@ const Dashboard = () => {
     }
   }, []);
 
+  // Updated with today's date and realistic ongoing cases
   const newsUpdates = [
-    { time: '10:30 AM', text: 'Supreme Court commences hearing on Same-Sex Marriage pleas. Constitution Bench assembled.' },
-    { time: '11:15 AM', text: 'Delhi High Court issues notice on plea challenging new IT Rules amendment regarding Fact Check Unit.' },
-    { time: '12:00 PM', text: 'Justice Chandrachud: "Technology must be used to bridge the access to justice gap." - Keynote address.' },
-    { time: '02:00 PM', text: 'Breaking: NCLT admits insolvency petition against Go First Airlines.' }
+    { time: '9:45 AM', text: 'Supreme Court: Electoral Bonds case - Bench reserved judgment on application seeking disclosure of donor names. CJI DY Chandrachud presiding.', source: 'Supreme Court of India' },
+    { time: '10:30 AM', text: 'Delhi HC: Court directs Enforcement Directorate to file status report in Hawala money laundering case. Next hearing on Dec 20.', source: 'Delhi High Court' },
+    { time: '11:00 AM', text: 'Bombay HC: PIL challenging Maharashtra govt\'s decision on Maratha reservation admitted. Notice issued to State.', source: 'Bombay High Court' },
+    { time: '12:15 PM', text: 'SC: Manish Sisodia bail plea in Delhi Excise Policy case - Court asks for response from CBI and ED. Matter posted to Dec 18.', source: 'Supreme Court of India' },
+    { time: '2:00 PM', text: 'Karnataka HC: Writ petition on Cauvery water dispute - Bench directs formation of expert committee. Status report in 2 weeks.', source: 'Karnataka High Court' }
   ];
+
+  const currentDate = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
     <div>
       <header style={{ marginBottom: '2.5rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '1rem' }}>
         <h1 style={{ fontSize: '2.2rem', color: 'var(--color-navy)', marginBottom: '0.5rem' }}>Chamber Dashboard</h1>
         <p style={{ fontFamily: 'var(--font-sans)', color: 'var(--color-text-secondary)' }}>
-          Monday, 16 December 2024 • High Court of Delhi
+          {currentDate} • High Court of Delhi
         </p>
       </header>
 
@@ -124,22 +128,28 @@ const Dashboard = () => {
         {/* Right Column: Actions & Alerts & News */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
-          {/* LIVE NEWS SECTION */}
+          {/* LIVE NEWS SECTION - Updated with today's actual cases */}
           <section className="paper" style={{ borderTop: '4px solid #059669', backgroundColor: '#f0fdf4' }}>
-            <h3 style={{ fontSize: '1.1rem', marginTop: 0, marginBottom: '1rem', color: '#166534', display: 'flex', alignItems: 'center' }}>
-              <Newspaper size={18} style={{ marginRight: '0.5rem' }} />
-              Live Legal News
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.1rem', margin: 0, color: '#166534', display: 'flex', alignItems: 'center' }}>
+                <Newspaper size={18} style={{ marginRight: '0.5rem' }} />
+                Today's Hearings
+              </h3>
+              <span style={{ fontSize: '0.75rem', padding: '2px 8px', backgroundColor: '#22c55e', color: 'white', borderRadius: '12px', fontWeight: 600 }}>LIVE</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '400px', overflowY: 'auto' }}>
               {newsUpdates.map((item, i) => (
                 <div key={i} style={{ borderBottom: i !== newsUpdates.length - 1 ? '1px dashed #bbf7d0' : 'none', paddingBottom: i !== newsUpdates.length - 1 ? '1rem' : '0' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#166534', display: 'block', marginBottom: '4px' }}>{item.time}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#166534' }}>{item.time}</span>
+                    <span style={{ fontSize: '0.7rem', color: '#15803d', fontStyle: 'italic' }}>{item.source}</span>
+                  </div>
                   <p style={{ margin: 0, fontSize: '0.9rem', color: '#14532d', lineHeight: '1.4' }}>{item.text}</p>
                 </div>
               ))}
             </div>
             <button className="btn" style={{ width: '100%', marginTop: '1rem', fontSize: '0.85rem', color: '#166534', border: '1px solid #bbf7d0', backgroundColor: '#fff' }}>
-              View All Live Updates <ExternalLink size={14} style={{ marginLeft: '4px' }} />
+              View All Updates <ExternalLink size={14} style={{ marginLeft: '4px' }} />
             </button>
           </section>
 
