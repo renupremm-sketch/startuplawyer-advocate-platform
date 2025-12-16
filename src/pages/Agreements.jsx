@@ -7,20 +7,24 @@ const Agreements = () => {
     const [activeTab, setActiveTab] = useState('drafts');
     const [analysisFile, setAnalysisFile] = useState(null);
     const [analysisResult, setAnalysisResult] = useState(null);
+    const [isScanning, setIsScanning] = useState(false);
+    const fileInputRef = React.useRef(null);
 
-    const agreementList = [
-        { id: 'AG-2024-001', title: 'Non-Disclosure Agreement (Mutual)', client: 'TechCorp India', updated: '16 Dec 2024', status: 'Draft', version: 'v3.2' },
-        { id: 'AG-2024-002', title: 'Commercial Lease Deed', client: 'Mr. Rajesh Verma', updated: '14 Dec 2024', status: 'Internal Review', version: 'v1.0' },
-        { id: 'AG-2023-089', title: 'Shareholders Agreement', client: 'Innovate Pvt Ltd', updated: '20 Nov 2024', status: 'Executed', version: 'FINAL' },
-    ];
+    const onUploadClick = () => {
+        fileInputRef.current.click();
+    };
 
-    const handleFileUpload = (e) => {
-        // Simulation of file upload
-        const file = { name: 'Vendor_Service_Agreement_Draft_v1.pdf', size: '1.8 MB' };
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
         setAnalysisFile(file);
+        setIsScanning(true);
+        setAnalysisResult(null); // Reset previous results
 
-        // Simulate Analysis Processing
+        // Simulate AI Processing Time
         setTimeout(() => {
+            setIsScanning(false);
             setAnalysisResult({
                 score: 72,
                 risks: [
@@ -30,8 +34,16 @@ const Agreements = () => {
                 ],
                 summary: 'Standard service agreement. favorable to the Service Provider. Lacks standard liability caps found in similar industry contracts.'
             });
-        }, 1500);
+        }, 2000);
     };
+
+    const agreementList = [
+        { id: 'AG-2024-001', title: 'Non-Disclosure Agreement (Mutual)', client: 'TechCorp India', updated: '16 Dec 2024', status: 'Draft', version: 'v3.2' },
+        { id: 'AG-2024-002', title: 'Commercial Lease Deed', client: 'Mr. Rajesh Verma', updated: '14 Dec 2024', status: 'Internal Review', version: 'v1.0' },
+        { id: 'AG-2023-089', title: 'Shareholders Agreement', client: 'Innovate Pvt Ltd', updated: '20 Nov 2024', status: 'Executed', version: 'FINAL' },
+    ];
+
+    // handleFileUpload is removed as per instructions
 
     return (
         <div>
@@ -52,6 +64,15 @@ const Agreements = () => {
                 </div>
             </header>
 
+            {/* Hidden Input for Real File Picking */}
+            <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                accept=".pdf,.docx,.doc"
+                onChange={handleFileChange}
+            />
+
             {/* Tabs */}
             <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', marginBottom: '2rem' }}>
                 <div onClick={() => setActiveTab('drafts')} style={{ padding: '1rem 2rem', cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-sans)', borderBottom: activeTab === 'drafts' ? '3px solid var(--color-navy)' : 'none', color: activeTab === 'drafts' ? 'var(--color-navy)' : '#64748b' }}>
@@ -67,36 +88,58 @@ const Agreements = () => {
 
             {activeTab === 'review' ? (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                    {/* Upload Section */}
+                    {/* Left Column: Upload & Chat */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                        <div className="paper" style={{ border: '2px dashed #cbd5e1', backgroundColor: '#f8fafc', padding: '3rem', textAlign: 'center', cursor: 'pointer' }} onClick={handleFileUpload}>
-                            <UploadCloud size={48} color="#94a3b8" style={{ marginBottom: '1rem' }} />
-                            <h3 style={{ margin: 0, color: '#475569' }}>{analysisFile ? analysisFile.name : 'Upload Agreement for Review'}</h3>
-                            <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>
-                                {analysisFile ? 'Analysis Complete. Click to re-upload.' : 'Drag & drop PDF/DOCX or click to browse'}
-                            </p>
+                        <div
+                            className="paper"
+                            style={{
+                                border: '2px dashed #cbd5e1',
+                                backgroundColor: isScanning ? '#f0f9ff' : '#f8fafc',
+                                padding: '3rem',
+                                textAlign: 'center',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease'
+                            }}
+                            onClick={onUploadClick}
+                        >
+                            {isScanning ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', animation: 'fadeIn 0.5s' }}>
+                                    <div style={{ width: '40px', height: '40px', border: '3px solid #e2e8f0', borderTopColor: '#0ea5e9', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '1rem' }}></div>
+                                    <h3 style={{ margin: 0, color: '#0f172a' }}>Scanning {analysisFile?.name}...</h3>
+                                    <p style={{ color: '#0ea5e9' }}>Extracting clauses & checking risks...</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <UploadCloud size={48} color="#94a3b8" style={{ marginBottom: '1rem' }} />
+                                    <h3 style={{ margin: 0, color: '#475569' }}>{analysisFile ? 'Analyze Another Document' : 'Upload Agreement for Review'}</h3>
+                                    <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>
+                                        {analysisFile ? `Last analyzed: ${analysisFile.name}` : 'Click to select PDF/DOCX'}
+                                    </p>
+                                </>
+                            )}
                         </div>
 
-                        {/* Q&A / Interaction */}
-                        <div className="paper" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ borderBottom: '1px solid #eee', paddingBottom: '1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <MessageSquare size={18} color="var(--color-navy)" />
-                                <strong style={{ color: 'var(--color-navy)' }}>Chat with Document</strong>
+                        {(analysisFile || analysisResult) && (
+                            <div className="paper fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                <div style={{ borderBottom: '1px solid #eee', paddingBottom: '1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <MessageSquare size={18} color="var(--color-navy)" />
+                                    <strong style={{ color: 'var(--color-navy)' }}>Chat with Document</strong>
+                                </div>
+                                <div style={{ flex: 1, backgroundColor: '#f9f9f9', borderRadius: '4px', padding: '1rem', marginBottom: '1rem', color: '#666', fontStyle: 'italic', fontSize: '0.9rem' }}>
+                                    Ask questions like "What are the termination clauses?" or "Is there a non-compete?"...
+                                </div>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <input type="text" placeholder="Ask a question..." style={{ flex: 1, padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }} />
+                                    <button className="btn btn-primary">Ask</button>
+                                </div>
                             </div>
-                            <div style={{ flex: 1, backgroundColor: '#f9f9f9', borderRadius: '4px', padding: '1rem', marginBottom: '1rem', color: '#666', fontStyle: 'italic', fontSize: '0.9rem' }}>
-                                Ask questions like "What are the termination clauses?" or "Is there a non-compete?"...
-                            </div>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <input type="text" placeholder="Ask a question about this agreement..." style={{ flex: 1, padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }} />
-                                <button className="btn btn-primary">Ask</button>
-                            </div>
-                        </div>
+                        )}
                     </div>
 
-                    {/* Analysis Results */}
+                    {/* Right Column: Results */}
                     <div>
                         {analysisResult ? (
-                            <div className="paper" style={{ borderTop: '4px solid #f59e0b' }}>
+                            <div className="paper fade-in" style={{ borderTop: '4px solid #f59e0b' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                                     <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Risk Analysis Report</h2>
                                     <span style={{ fontSize: '1.5rem', fontWeight: 700, color: analysisResult.score > 80 ? '#16a34a' : '#d97706' }}>
@@ -130,8 +173,8 @@ const Agreements = () => {
                                 </div>
                             </div>
                         ) : (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8', fontStyle: 'italic' }}>
-                                Upload a document to view AI analysis.
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8', fontStyle: 'italic', minHeight: '300px' }}>
+                                {isScanning ? 'AI is analyzing the document structure...' : 'Upload a document to view AI analysis.'}
                             </div>
                         )}
                     </div>
@@ -190,21 +233,23 @@ const Agreements = () => {
             )}
 
             {/* Version Control Alert Sim */}
-            {activeTab !== 'review' && (
-                <div style={{ marginTop: '2rem', maxWidth: '600px' }}>
-                    <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '4px', padding: '1rem', display: 'flex', gap: '1rem' }}>
-                        <CheckCircle size={20} color="#2563eb" style={{ marginTop: '2px' }} />
-                        <div>
-                            <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.95rem', color: '#1e40af' }}>Version Control Active</h4>
-                            <p style={{ margin: 0, fontSize: '0.85rem', color: '#1e3a8a', lineHeight: '1.5' }}>
-                                Every edit made to an agreement is tracked with timestamp and user ID.
-                                Use the "History" button to revert to previous versions or compare changes (Delta View).
-                            </p>
+            {
+                activeTab !== 'review' && (
+                    <div style={{ marginTop: '2rem', maxWidth: '600px' }}>
+                        <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '4px', padding: '1rem', display: 'flex', gap: '1rem' }}>
+                            <CheckCircle size={20} color="#2563eb" style={{ marginTop: '2px' }} />
+                            <div>
+                                <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.95rem', color: '#1e40af' }}>Version Control Active</h4>
+                                <p style={{ margin: 0, fontSize: '0.85rem', color: '#1e3a8a', lineHeight: '1.5' }}>
+                                    Every edit made to an agreement is tracked with timestamp and user ID.
+                                    Use the "History" button to revert to previous versions or compare changes (Delta View).
+                                </p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 
