@@ -9,7 +9,7 @@ const Layout = ({ children }) => {
 
   // Modernized Access List
   const navItems = [
-    { label: 'Dashboard', path: '/', icon: LayoutDashboard },
+    { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { label: 'Case Diary', path: '/case-diary', icon: BookOpen },
     { label: 'AI Drafting', path: '/smart-draft', icon: PenTool },
     { label: 'Agreements', path: '/agreements', icon: FileText },
