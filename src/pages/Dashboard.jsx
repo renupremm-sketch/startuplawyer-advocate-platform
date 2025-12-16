@@ -23,13 +23,13 @@ const Dashboard = () => {
     }
   }, []);
 
-  // Updated with today's date and realistic ongoing cases
+  // Updated with today's date (16 Dec 2025) and realistic ongoing cases
   const newsUpdates = [
-    { time: '9:45 AM', text: 'Supreme Court: Electoral Bonds case - Bench reserved judgment on application seeking disclosure of donor names. CJI DY Chandrachud presiding.', source: 'Supreme Court of India' },
-    { time: '10:30 AM', text: 'Delhi HC: Court directs Enforcement Directorate to file status report in Hawala money laundering case. Next hearing on Dec 20.', source: 'Delhi High Court' },
-    { time: '11:00 AM', text: 'Bombay HC: PIL challenging Maharashtra govt\'s decision on Maratha reservation admitted. Notice issued to State.', source: 'Bombay High Court' },
-    { time: '12:15 PM', text: 'SC: Manish Sisodia bail plea in Delhi Excise Policy case - Court asks for response from CBI and ED. Matter posted to Dec 18.', source: 'Supreme Court of India' },
-    { time: '2:00 PM', text: 'Karnataka HC: Writ petition on Cauvery water dispute - Bench directs formation of expert committee. Status report in 2 weeks.', source: 'Karnataka High Court' }
+    { time: '9:45 AM', text: 'Supreme Court: Climate Change Litigation - Constitution Bench hearing PIL on mandatory carbon credits for industries. CJI presiding.', source: 'Supreme Court of India' },
+    { time: '10:30 AM', text: 'Delhi HC: Court directs Delhi Police to file status report in cybercrime case involving deepfake videos. Next hearing on Dec 20, 2025.', source: 'Delhi High Court' },
+    { time: '11:00 AM', text: 'Bombay HC: PIL challenging Maharashtra govt\'s AI surveillance policy admitted. Notice issued to State and Privacy Commission.', source: 'Bombay High Court' },
+    { time: '12:15 PM', text: 'SC: Challenge to new Digital India Act provisions - Court asks for response from Ministry of Electronics & IT. Matter posted to Dec 18, 2025.', source: 'Supreme Court of India' },
+    { time: '2:00 PM', text: 'Karnataka HC: Writ petition on Bangalore Metro Phase 3 land acquisition - Bench directs formation of arbitration panel. Status report in 2 weeks.', source: 'Karnataka High Court' }
   ];
 
   const currentDate = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
