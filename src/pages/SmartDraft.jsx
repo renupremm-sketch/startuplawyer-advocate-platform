@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { PenTool, CheckCircle, AlertTriangle, Download, Copy, BookOpen, Wand2 } from 'lucide-react';
+import { PenTool, CheckCircle, AlertTriangle, Download, Copy, BookOpen, Wand2, Zap, BarChart3, RefreshCw } from 'lucide-react';
 
 const SmartDraft = () => {
     const [activeDraft, setActiveDraft] = useState('Bail Application u/s 439 CrPC');
@@ -22,12 +22,12 @@ MOST RESPECTFULLY SHOWETH:
 
 3. That the investigation is complete and the Charge Sheet has been filed. No fruitful purpose will be served by keeping the Petitioner behind bars.`);
 
-    // For auto-scroll
+    const [winProb, setWinProb] = useState(65);
     const contentRef = useRef(null);
 
     const handleCopy = () => {
         navigator.clipboard.writeText(content);
-        // Toast could go here
+        alert('Copied to Clipboard!');
     };
 
     const handleExport = () => {
@@ -35,18 +35,27 @@ MOST RESPECTFULLY SHOWETH:
         const file = new Blob([content], { type: 'text/plain' });
         element.href = URL.createObjectURL(file);
         element.download = "Bail_Application_Draft.txt";
-        document.body.appendChild(element); // Required for this to work in FireFox
+        document.body.appendChild(element);
         element.click();
     };
 
     const handleInsert = (text) => {
         setContent(prev => prev + "\n\n" + text);
-        // Scroll to bottom
+        // Animate win probability up
+        setWinProb(prev => Math.min(prev + 5, 95));
+
         if (contentRef.current) {
             setTimeout(() => {
                 contentRef.current.scrollTop = contentRef.current.scrollHeight;
             }, 100);
         }
+    };
+
+    const handleRewrite = (style) => {
+        const newText = "\n\n[AI REWRITTEN - " + style.toUpperCase() + "]\n" +
+            "4. It is most respectfully submitted that the continued incarceration of the Petitioner is in direct violation of his fundamental right to life and liberty enshrined under Article 21 of the Constitution. The allegations are civil in nature and have been given a criminal colour solely to exert pressure.";
+
+        handleInsert(newText);
     };
 
     return (
@@ -60,21 +69,50 @@ MOST RESPECTFULLY SHOWETH:
                     </div>
                     <div style={{ display: 'flex', gap: '0.75rem' }}>
                         <button onClick={handleCopy} className="btn" style={{ padding: '0.5rem 1rem' }}><Copy size={16} style={{ marginRight: '0.5rem' }} /> Copy</button>
-                        <button onClick={handleExport} className="btn btn-primary" style={{ padding: '0.5rem 1rem' }}><Download size={16} style={{ marginRight: '0.5rem' }} /> Export to Word</button>
+                        <button onClick={handleExport} className="btn btn-primary" style={{ padding: '0.5rem 1rem' }}><Download size={16} style={{ marginRight: '0.5rem' }} /> Export</button>
                     </div>
                 </header>
 
-                <textarea
-                    ref={contentRef}
-                    className="paper"
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    style={{ flex: 1, padding: '3rem', fontFamily: 'var(--font-serif)', lineHeight: '2', whiteSpace: 'pre-wrap', overflowY: 'auto', border: '1px solid #e2e8f0', boxShadow: 'inset 0 0 20px rgba(0,0,0,0.02)', resize: 'none', fontSize: '1.05rem', color: '#333' }}
-                />
+                <div style={{ position: 'relative', flex: 1 }}>
+                    <textarea
+                        ref={contentRef}
+                        className="paper"
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        style={{ width: '100%', height: '100%', padding: '3rem', fontFamily: 'var(--font-serif)', lineHeight: '2', whiteSpace: 'pre-wrap', overflowY: 'auto', border: '1px solid #e2e8f0', boxShadow: 'inset 0 0 20px rgba(0,0,0,0.02)', resize: 'none', fontSize: '1.05rem', color: '#333', boxSizing: 'border-box' }}
+                    />
+
+                    {/* Floating Tone Tools */}
+                    <div style={{ position: 'absolute', bottom: '2rem', right: '2rem', display: 'flex', gap: '0.5rem', backgroundColor: '#fff', padding: '0.5rem', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', border: '1px solid #e2e8f0' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b', display: 'flex', alignItems: 'center', paddingRight: '0.5rem', borderRight: '1px solid #eee' }}>
+                            <RefreshCw size={12} style={{ marginRight: '4px' }} /> AI Rewrite
+                        </span>
+                        <button onClick={() => handleRewrite('Strong')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: '#b91c1c', fontWeight: 500 }}>Fierce</button>
+                        <button onClick={() => handleRewrite('Polite')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: '#15803d', fontWeight: 500 }}>Formal</button>
+                        <button onClick={() => handleRewrite('Concise')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: '#0369a1', fontWeight: 500 }}>Concise</button>
+                    </div>
+                </div>
             </div>
 
             {/* Assistant Sidebar */}
             <aside style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+
+                {/* Win Probability Meter */}
+                <div className="paper" style={{ padding: '1.5rem', textAlign: 'center', background: 'linear-gradient(135deg, #1e3a8a 0%, #172554 100%)', color: 'white' }}>
+                    <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem', display: 'flex', justifyContent: 'center', alignItems: 'center', opacity: 0.9 }}>
+                        <BarChart3 size={16} style={{ marginRight: '0.5rem' }} /> Win Probability
+                    </h3>
+                    <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto' }}>
+                        <svg viewBox="0 0 36 36" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
+                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#ffffff33" strokeWidth="3" />
+                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#22c55e" strokeWidth="3" strokeDasharray={`${winProb}, 100`} />
+                        </svg>
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '1.5rem', fontWeight: 700 }}>
+                            {winProb}%
+                        </div>
+                    </div>
+                    <p style={{ margin: '1rem 0 0 0', fontSize: '0.8rem', opacity: 0.8 }}>Strong arguments detected. Add citations to improve.</p>
+                </div>
 
                 {/* Smart Suggestions */}
                 <div className="paper" style={{ padding: '0', border: '1px solid #bfdbfe', backgroundColor: '#eff6ff' }}>
@@ -108,22 +146,7 @@ MOST RESPECTFULLY SHOWETH:
                             <div style={{ color: '#666', marginTop: '2px' }}>(2012) 1 SCC 40</div>
                             <div style={{ fontSize: '0.8rem', color: '#15803d', marginTop: '4px' }}>✓ Supports Bail</div>
                         </li>
-                        <li>
-                            <a href="#" style={{ color: 'var(--color-navy)', fontWeight: 600, textDecoration: 'none' }}>Arnesh Kumar v. State of Bihar</a>
-                            <div style={{ color: '#666', marginTop: '2px' }}>(2014) 8 SCC 273</div>
-                            <div style={{ fontSize: '0.8rem', color: '#15803d', marginTop: '4px' }}>✓ Arrest Guidelines</div>
-                        </li>
                     </ul>
-                </div>
-
-                {/* Weakness Warning */}
-                <div className="paper" style={{ padding: '1rem', backgroundColor: '#fffbe6', border: '1px solid #fcd34d' }}>
-                    <strong style={{ display: 'flex', alignItems: 'center', color: '#92400e', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
-                        <AlertTriangle size={16} style={{ marginRight: '0.5rem' }} /> Weak Ground Detected
-                    </strong>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#b45309' }}>
-                        Avoid arguing "facts of the case" in depth for bail. Stick to "broad probabilities".
-                    </p>
                 </div>
 
             </aside>

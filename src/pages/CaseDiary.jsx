@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, MoreVertical, Plus, Search, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Calendar, Clock, MapPin, MoreVertical, Plus, Search, ChevronLeft, ChevronRight, X, Mic, MicOff } from 'lucide-react';
 
 const CaseDiary = () => {
     const [cases, setCases] = useState([]);
@@ -8,6 +8,7 @@ const CaseDiary = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [newCase, setNewCase] = useState({ title: '', caseNo: '', court: '', time: '', type: 'Hearing', stage: 'Arguments' });
     const [editingCase, setEditingCase] = useState(null);
+    const [isRecording, setIsRecording] = useState(false);
 
     // Initial Load - Demo Data
     useEffect(() => {
@@ -35,7 +36,7 @@ const CaseDiary = () => {
     };
 
     const handleEditClick = (c) => {
-        setEditingCase({ ...c }); // Copy to avoid direct mutation
+        setEditingCase({ ...c });
         setIsEditModalOpen(true);
     };
 
@@ -51,6 +52,24 @@ const CaseDiary = () => {
         alert("Date picker would open here. (Demo Mode)");
     };
 
+    const handleVoiceRecord = () => {
+        setIsRecording(true);
+        // Simulate Recording Delay then Transcribe
+        setTimeout(() => {
+            setIsRecording(false);
+            setNewCase({
+                title: 'Recorded Case Entry #' + Math.floor(Math.random() * 100),
+                caseNo: 'Unknown',
+                court: 'High Court',
+                time: '11:00 AM',
+                type: 'Urgent Mentioning',
+                stage: 'Admission',
+                notes: 'Transcribed: Client called regarding urgent stay matter. Needs filing by tomorrow morning.'
+            });
+            setIsModalOpen(true);
+        }, 3000); // 3 seconds "recording"
+    };
+
     return (
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
@@ -61,6 +80,17 @@ const CaseDiary = () => {
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button
+                        onClick={handleVoiceRecord}
+                        className="btn"
+                        style={{ backgroundColor: isRecording ? '#fee2e2' : '#fff', border: isRecording ? '1px solid #ef4444' : '1px solid var(--color-border)', color: isRecording ? '#b91c1c' : 'inherit', minWidth: '140px' }}
+                    >
+                        {isRecording ? (
+                            <><div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef4444', marginRight: '8px', animation: 'pulse 1s infinite' }}></div> Recording...</>
+                        ) : (
+                            <><Mic size={16} style={{ marginRight: '0.5rem' }} /> Voice Entry</>
+                        )}
+                    </button>
                     <button onClick={jumpToDate} className="btn" style={{ backgroundColor: '#fff', border: '1px solid var(--color-border)' }}>
                         <Calendar size={16} style={{ marginRight: '0.5rem' }} /> Jump to Date
                     </button>
@@ -159,6 +189,15 @@ const CaseDiary = () => {
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                         <input placeholder="Court" value={newCase.court} onChange={e => setNewCase({ ...newCase, court: e.target.value })} style={{ padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }} />
                                         <input type="time" value={newCase.time} onChange={e => setNewCase({ ...newCase, time: e.target.value })} style={{ padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }} />
+                                    </div>
+                                    <div style={{ marginTop: '0.5rem' }}>
+                                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.25rem' }}>Notes</label>
+                                        <textarea
+                                            placeholder="Details or Voice Transcript will appear here..."
+                                            value={newCase.notes || ''}
+                                            onChange={(e) => setNewCase({ ...newCase, notes: e.target.value })}
+                                            style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', minHeight: '80px', fontFamily: 'inherit' }}
+                                        />
                                     </div>
                                     <button onClick={handleAddCase} className="btn btn-primary" style={{ marginTop: '1rem' }}>Add to Diary</button>
                                 </>
