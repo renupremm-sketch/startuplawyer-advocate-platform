@@ -3,9 +3,9 @@ import { Search, BookOpen, Scale, Filter, ChevronRight, Gavel, HelpCircle } from
 
 const Research = () => {
     const [searchTerm, setSearchTerm] = useState('');
-    const [searchType, setSearchType] = useState('caselaw'); // caselaw, bareact, judge, situation
+    const [searchType, setSearchType] = useState('caselaw');
 
-    const results = [
+    const allResults = [
         {
             title: 'Kesavananda Bharati v. State of Kerala',
             citation: '(1973) 4 SCC 225',
@@ -38,8 +38,21 @@ const Research = () => {
         }
     ];
 
+    const [results, setResults] = useState(allResults);
+
     const handleSearch = () => {
-        alert(`Searching for "${searchTerm}" in ${searchType} database...`);
+        if (!searchTerm) {
+            setResults(allResults);
+            return;
+        }
+
+        // Simulating Search Delay
+        const filtered = allResults.filter(r =>
+            r.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            r.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (r.situationMatch && r.situationMatch.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        setResults(filtered);
     };
 
     return (
@@ -106,6 +119,7 @@ const Research = () => {
                             placeholder={searchType === 'situation' ? "Describe the facts (e.g., 'Driver crashed due to heavy rain on highway')..." : "Enter keywords, citation, or act name..."}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                             style={{ flex: 1, padding: '0.75rem 1rem', fontSize: '1rem', border: '1px solid #ccc', borderRadius: '4px', outline: 'none' }}
                         />
                         <button onClick={handleSearch} className="btn btn-primary" style={{ padding: '0 2rem' }}>
@@ -117,11 +131,11 @@ const Research = () => {
                 {/* Results Simulation */}
                 <div>
                     <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: 'var(--color-navy)' }}>
-                        {searchType === 'situation' ? 'Judgments with Similar Facts' : 'Top Relevancy Matches'}
+                        {results.length === 0 ? 'No Results Found' : (searchType === 'situation' ? 'Judgments with Similar Facts' : 'Top Relevancy Matches')}
                     </h3>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        {results.filter(r => searchType !== 'situation' || r.situationMatch).map((caseItem, i) => (
+                        {results.map((caseItem, i) => (
                             <div key={i} className="paper" style={{ padding: '1.5rem', transition: 'transform 0.2s', cursor: 'pointer' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                                     <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-gold)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>

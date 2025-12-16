@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { PenTool, CheckCircle, AlertTriangle, Download, Copy, BookOpen, Wand2 } from 'lucide-react';
 
 const SmartDraft = () => {
@@ -22,18 +22,31 @@ MOST RESPECTFULLY SHOWETH:
 
 3. That the investigation is complete and the Charge Sheet has been filed. No fruitful purpose will be served by keeping the Petitioner behind bars.`);
 
+    // For auto-scroll
+    const contentRef = useRef(null);
+
     const handleCopy = () => {
         navigator.clipboard.writeText(content);
-        alert('Draft content copied to clipboard.');
+        // Toast could go here
     };
 
     const handleExport = () => {
-        alert('Generating .DOCX file... (Feature available in live version)');
+        const element = document.createElement("a");
+        const file = new Blob([content], { type: 'text/plain' });
+        element.href = URL.createObjectURL(file);
+        element.download = "Bail_Application_Draft.txt";
+        document.body.appendChild(element); // Required for this to work in FireFox
+        element.click();
     };
 
     const handleInsert = (text) => {
         setContent(prev => prev + "\n\n" + text);
-        alert('Clause inserted into draft.');
+        // Scroll to bottom
+        if (contentRef.current) {
+            setTimeout(() => {
+                contentRef.current.scrollTop = contentRef.current.scrollHeight;
+            }, 100);
+        }
     };
 
     return (
@@ -51,9 +64,13 @@ MOST RESPECTFULLY SHOWETH:
                     </div>
                 </header>
 
-                <div className="paper" style={{ flex: 1, padding: '3rem', fontFamily: 'var(--font-serif)', lineHeight: '2', whiteSpace: 'pre-wrap', overflowY: 'auto', border: '1px solid #e2e8f0', boxShadow: 'inset 0 0 20px rgba(0,0,0,0.02)' }}>
-                    {content}
-                </div>
+                <textarea
+                    ref={contentRef}
+                    className="paper"
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    style={{ flex: 1, padding: '3rem', fontFamily: 'var(--font-serif)', lineHeight: '2', whiteSpace: 'pre-wrap', overflowY: 'auto', border: '1px solid #e2e8f0', boxShadow: 'inset 0 0 20px rgba(0,0,0,0.02)', resize: 'none', fontSize: '1.05rem', color: '#333' }}
+                />
             </div>
 
             {/* Assistant Sidebar */}
@@ -69,7 +86,7 @@ MOST RESPECTFULLY SHOWETH:
                         <div style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #dbeafe' }}>
                             <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1e3a8a', marginBottom: '0.25rem' }}>Add Ground of Parity</div>
                             <p style={{ margin: 0, fontSize: '0.8rem', color: '#3b82f6' }}>Co-accused Suresh was granted bail yesterday. Strong ground for parity.</p>
-                            <button onClick={() => handleInsert("4. That the co-accused Suresh has already been granted bail vide order dated 15.12.2024. The Petitioner claims parity.")} className="btn" style={{ marginTop: '0.5rem', padding: '0.25rem 0.5rem', fontSize: '0.75rem', backgroundColor: '#fff' }}>+ Insert Clause</button>
+                            <button onClick={() => handleInsert("4. That the co-accused Suresh has already been granted bail vide order dated 15.12.2024. The Petitioner claims parity with the co-accused.")} className="btn" style={{ marginTop: '0.5rem', padding: '0.25rem 0.5rem', fontSize: '0.75rem', backgroundColor: '#fff' }}>+ Insert Clause</button>
                         </div>
                         <div>
                             <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1e3a8a', marginBottom: '0.25rem' }}>Triple Test Compliance</div>

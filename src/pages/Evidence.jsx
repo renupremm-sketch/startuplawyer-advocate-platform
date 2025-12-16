@@ -1,7 +1,49 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Tag, Clock, FileText, Plus } from 'lucide-react';
 
 const Evidence = () => {
+    const [docs, setDocs] = useState([
+        { fid: 'Ex-P1', name: 'Impugned Order dated 12.05.2024', date: '15 May 2024', type: 'Exhibit', tags: ['Crucial', 'Order'] },
+        { fid: 'Doc-2', name: 'Representation to Authority', date: '01 Apr 2024', type: 'Annexure', tags: ['P-2'] },
+        { fid: 'Doc-3', name: 'Medical Rerports of Petitioner', date: '10 Mar 2024', type: 'Annexure', tags: ['P-3', 'Medical'] },
+        { fid: 'Int-1', name: 'Email Correspondence with Dept', date: 'Feb 2024', type: 'Internal', tags: ['Privileged'] },
+    ]);
+    const fileInputRef = React.useRef(null);
+
+    const handleUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const newDoc = {
+            fid: `New-${Math.floor(Math.random() * 100)}`,
+            name: file.name,
+            date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+            type: 'Uploaded',
+            tags: ['New']
+        };
+        setDocs([newDoc, ...docs]);
+    };
+
+    const handleFilter = () => {
+        const exhibits = docs.filter(d => d.type === 'Exhibit');
+        // Toggle logic: if showing all, filter. If showing filtered, show all.
+        // Simplified check: If current length < 4 (initial mock), reset. Else filter.
+        // Actually best way: check if all are Exhibits.
+        const allAreExhibits = docs.every(d => d.type === 'Exhibit');
+
+        if (allAreExhibits && docs.length > 0) {
+            // Reset to default mock + any uploaded ones (upload logic might be tricky to persist in simplistic toggle, but fine for demo)
+            // For robust demo, let's just toggling between "Strict Filter" and "All"
+            setDocs([
+                { fid: 'Ex-P1', name: 'Impugned Order dated 12.05.2024', date: '15 May 2024', type: 'Exhibit', tags: ['Crucial', 'Order'] },
+                { fid: 'Doc-2', name: 'Representation to Authority', date: '01 Apr 2024', type: 'Annexure', tags: ['P-2'] },
+                { fid: 'Doc-3', name: 'Medical Rerports of Petitioner', date: '10 Mar 2024', type: 'Annexure', tags: ['P-3', 'Medical'] },
+                { fid: 'Int-1', name: 'Email Correspondence with Dept', date: 'Feb 2024', type: 'Internal', tags: ['Privileged'] },
+            ]);
+        } else {
+            setDocs(exhibits);
+        }
+    };
+
     return (
         <div>
             <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between' }}>
@@ -11,7 +53,8 @@ const Evidence = () => {
                         Exhibits, documents, and chronological timelines.
                     </p>
                 </div>
-                <button className="btn btn-primary">+ Upload Evidence</button>
+                <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleUpload} />
+                <button onClick={() => fileInputRef.current.click()} className="btn btn-primary">+ Upload Evidence</button>
             </header>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) 1fr', gap: '2rem' }}>
@@ -20,17 +63,12 @@ const Evidence = () => {
                 <div className="paper" style={{ padding: 0 }}>
                     <div style={{ padding: '1rem', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', backgroundColor: '#f9f9f9' }}>
                         <strong style={{ color: '#444' }}>WP(C) 1234/2024 - Case Documents</strong>
-                        <button className="btn" style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}>Filter by Type</button>
+                        <button onClick={handleFilter} className="btn" style={{ fontSize: '0.8rem', padding: '0.25rem 0.5rem' }}>Filter by Type</button>
                     </div>
 
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                         <tbody>
-                            {[
-                                { fid: 'Ex-P1', name: 'Impugned Order dated 12.05.2024', date: '15 May 2024', type: 'Exhibit', tags: ['Crucial', 'Order'] },
-                                { fid: 'Doc-2', name: 'Representation to Authority', date: '01 Apr 2024', type: 'Annexure', tags: ['P-2'] },
-                                { fid: 'Doc-3', name: 'Medical Rerports of Petitioner', date: '10 Mar 2024', type: 'Annexure', tags: ['P-3', 'Medical'] },
-                                { fid: 'Int-1', name: 'Email Correspondence with Dept', date: 'Feb 2024', type: 'Internal', tags: ['Privileged'] },
-                            ].map((doc, i) => (
+                            {docs.map((doc, i) => (
                                 <tr key={i} style={{ borderBottom: '1px solid #f1f1f1' }}>
                                     <td style={{ padding: '1rem', fontWeight: 600, color: 'var(--color-navy)', width: '10%' }}>{doc.fid}</td>
                                     <td style={{ padding: '1rem' }}>

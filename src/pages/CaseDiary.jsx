@@ -1,253 +1,168 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, BookOpen, PenTool, Search, X } from 'lucide-react';
+import { Calendar, Clock, MapPin, MoreVertical, Plus, Search, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 const CaseDiary = () => {
-    const [selectedDate, setSelectedDate] = useState(new Date());
     const [cases, setCases] = useState([]);
-    const [showModal, setShowModal] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [newCase, setNewCase] = useState({ title: '', caseNo: '', court: '', time: '', type: 'Hearing', stage: 'Arguments' });
+    const [editingCase, setEditingCase] = useState(null);
 
-    // Form State
-    const [newCase, setNewCase] = useState({
-        court_name: 'High Court of Delhi',
-        case_number: '',
-        title: '',
-        stage: 'Admission'
-    });
-
-    // Mock Data for Demo / Fallback
-    const mockCases = [
-        { id: 1, case_number_original: 'WP(C) 142/2024', title: 'Sharma Construction v. DDA', court_name: 'High Court of Delhi', judge_name: 'Hon. Justice Prathiba Singh', notes: 'Argument heard on maintainability. Court directs filing of counter-affidavit within 4 weeks. Next date fixed for final disposal.', current_stage: 'Arguments', next_hearing_date: '2025-01-24' },
-        { id: 2, case_number_original: 'CS(OS) 55/2023', title: 'Global Tech v. Innovate Ltd', court_name: 'High Court of Delhi', judge_name: 'Hon. Justice Sanjeev Narula', notes: 'Witness cross-examination of PW-1 concluded. Plaintiff to summon next witness. Commissioner appointed for recording evidence.', current_stage: 'Evidence', next_hearing_date: '2025-02-10' }
-    ];
-
-    const fetchCases = async () => {
-        try {
-            // Try Production API first
-            const res = await fetch('http://localhost:5000/api/cases');
-            // In a real deployed env, this URL should be your production API.
-            // Since we are likely on Vercel frontend only, this will fail or return 404/Network Error.
-
-            if (!res.ok) throw new Error("API Unreachable");
-
-            const data = await res.json();
-            if (data.data) setCases(data.data);
-        } catch (err) {
-            console.warn("API/Backend unreachable (Demo Mode Active). Using Local Data.");
-            // Fallback to LocalStorage + Mock
-            const localData = localStorage.getItem('demo_cases');
-            if (localData) {
-                setCases(JSON.parse(localData));
-            } else {
-                setCases(mockCases);
-                localStorage.setItem('demo_cases', JSON.stringify(mockCases));
-            }
-        }
-    };
-
+    // Initial Load - Demo Data
     useEffect(() => {
-        fetchCases();
+        const storedCases = localStorage.getItem('demo_cases');
+        if (storedCases) {
+            setCases(JSON.parse(storedCases));
+        } else {
+            const initialData = [
+                { id: 1, title: 'State vs. Rajesh Kumar', caseNo: 'Cr. Case 45/2023', court: 'High Court, Court 4', time: '10:30 AM', type: 'Hearing', stage: 'Arguments', notes: 'Focus on cross-examination of PW-3.' },
+                { id: 2, title: 'Amitabh vs. TechCorp', caseNo: 'Civ. Suit 892/2024', court: 'District Court, Saket', time: '02:00 PM', type: 'Evidence', stage: 'Plaintiff Evidence', notes: 'Submit affidavit of admission/denial.' },
+            ];
+            setCases(initialData);
+            localStorage.setItem('demo_cases', JSON.stringify(initialData));
+        }
+        setLoading(false);
     }, []);
 
-    const handleSave = async () => {
-        if (!newCase.case_number || !newCase.title) return alert("Case Number and Title are required.");
+    const handleAddCase = () => {
+        const caseEntry = { id: Date.now(), ...newCase };
+        const updatedCases = [...cases, caseEntry];
+        setCases(updatedCases);
+        localStorage.setItem('demo_cases', JSON.stringify(updatedCases));
+        setIsModalOpen(false);
+        setNewCase({ title: '', caseNo: '', court: '', time: '', type: 'Hearing', stage: 'Arguments' });
+    };
 
-        try {
-            // Try Production API
-            const res = await fetch('http://localhost:5000/api/cases', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newCase)
-            });
+    const handleEditClick = (c) => {
+        setEditingCase({ ...c }); // Copy to avoid direct mutation
+        setIsEditModalOpen(true);
+    };
 
-            if (!res.ok) throw new Error("API Failed");
+    const handleSaveEdit = () => {
+        const updatedCases = cases.map(c => c.id === editingCase.id ? editingCase : c);
+        setCases(updatedCases);
+        localStorage.setItem('demo_cases', JSON.stringify(updatedCases));
+        setIsEditModalOpen(false);
+        setEditingCase(null);
+    };
 
-            const result = await res.json();
-            if (result.message === 'success') {
-                alert('Case Saved Successfully (Server)!');
-                setShowModal(false);
-                setNewCase({ court_name: 'High Court of Delhi', case_number: '', title: '', stage: 'Admission' });
-                fetchCases();
-            }
-        } catch (error) {
-            console.warn("Saving to Local Demo Storage (Backend unavailable).");
-
-            // Local Demo Save
-            const currentCases = JSON.parse(localStorage.getItem('demo_cases') || JSON.stringify(mockCases));
-            const newEntry = {
-                id: Date.now(),
-                case_number_original: newCase.case_number,
-                title: newCase.title,
-                court_name: newCase.court_name,
-                current_stage: newCase.stage,
-                notes: 'New case entry created (Demo Mode).',
-                judge_name: 'Pending Allocation'
-            };
-
-            const updatedCases = [newEntry, ...currentCases];
-            localStorage.setItem('demo_cases', JSON.stringify(updatedCases));
-            setCases(updatedCases);
-
-            alert('Case Saved Locally (Demo Mode Only)! Data will persist in this browser.');
-            setShowModal(false);
-            setNewCase({ court_name: 'High Court of Delhi', case_number: '', title: '', stage: 'Admission' });
-        }
+    const jumpToDate = () => {
+        alert("Date picker would open here. (Demo Mode)");
     };
 
     return (
-        <div>
-            <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
                 <div>
-                    <h1 style={{ fontSize: '2rem', color: 'var(--color-navy)', marginBottom: '0.5rem' }}>Case Diary</h1>
+                    <h1 style={{ fontSize: '2rem', color: 'var(--color-navy)', marginBottom: '0.5rem' }}>Daily Case Diary</h1>
                     <p style={{ fontFamily: 'var(--font-sans)', color: 'var(--color-text-secondary)' }}>
-                        Daily proceedings and history tracking.
+                        Manage hearings, track evidence stages, and schedule logs.
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button onClick={() => alert('Date Picker modal will open here.')} className="btn" style={{ backgroundColor: '#fff', border: '1px solid var(--color-border)' }}>
-                        <CalendarIcon size={16} style={{ marginRight: '0.5rem' }} /> Jump to Date
+                    <button onClick={jumpToDate} className="btn" style={{ backgroundColor: '#fff', border: '1px solid var(--color-border)' }}>
+                        <Calendar size={16} style={{ marginRight: '0.5rem' }} /> Jump to Date
                     </button>
-                    <button onClick={() => setShowModal(true)} className="btn btn-primary">
-                        + Add New Entry
+                    <button onClick={() => setIsModalOpen(true)} className="btn btn-primary">
+                        <Plus size={16} style={{ marginRight: '0.5rem' }} /> Add New Entry
                     </button>
                 </div>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem' }}>
-
-                {/* Date Navigator & Quick List */}
-                <aside>
-                    <div className="paper" style={{ padding: '0', overflow: 'hidden', marginBottom: '1.5rem' }}>
-                        <div style={{ padding: '1rem', backgroundColor: 'var(--color-navy)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <ChevronLeft size={20} style={{ cursor: 'pointer' }} onClick={() => setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate() - 1)))} />
-                            <div style={{ fontFamily: 'var(--font-sans)', fontWeight: 600 }}>{selectedDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
-                            <ChevronRight size={20} style={{ cursor: 'pointer' }} onClick={() => setSelectedDate(new Date(selectedDate.setDate(selectedDate.getDate() + 1)))} />
-                        </div>
-                        <div style={{ padding: '1rem' }}>
-                            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#999', marginBottom: '0.5rem', fontFamily: 'var(--font-sans)', textTransform: 'uppercase' }}>
-                                Quick Cause List
-                            </div>
-                            {cases.length > 0 ? cases.map((c, i) => (
-                                <div key={i} style={{ padding: '0.75rem', borderBottom: '1px solid #eee', cursor: 'pointer', transition: 'background 0.2s' }}>
-                                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--color-navy)' }}>{c.case_number_original}</div>
-                                    <div style={{ fontSize: '0.8rem', color: '#555', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</div>
-                                    <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.25rem' }}>{c.court_name}</div>
-                                </div>
-                            )) : <div style={{ color: '#888', fontStyle: 'italic', fontSize: '0.9rem' }}>No cases found.</div>}
-                        </div>
-                    </div>
-
-                    <div className="paper" style={{ padding: '1.5rem', textAlign: 'center', color: '#666' }}>
-                        <Search size={24} style={{ marginBottom: '0.5rem', opacity: 0.5 }} />
-                        <p style={{ fontSize: '0.9rem', fontFamily: 'var(--font-sans)', margin: 0 }}>Search past diaries by Case Number or Party Name</p>
-                    </div>
-                </aside>
-
-                {/* Diary Pages */}
-                <main>
-                    {cases.length > 0 ? cases.map((c, i) => (
-                        <div key={i} className="paper" style={{ marginBottom: '2rem', borderTop: '4px solid var(--color-gold)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '1rem', marginBottom: '1rem' }}>
-                                <div>
-                                    <h2 style={{ fontSize: '1.25rem', margin: 0, color: 'var(--color-navy)' }}>{c.title}</h2>
-                                    <div style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.25rem', fontFamily: 'var(--font-sans)' }}>
-                                        <strong>{c.case_number_original}</strong> • {c.court_name}
-                                    </div>
-                                </div>
-                                <div style={{ textAlign: 'right', fontSize: '0.9rem', fontFamily: 'var(--font-sans)' }}>
-                                    <div style={{ color: '#666' }}>Bench</div>
-                                    <div style={{ fontWeight: 600, color: 'var(--color-navy)' }}>{c.judge_name || 'Not Assigned'}</div>
-                                </div>
-                            </div>
-
-                            <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1rem', lineHeight: '1.8', color: '#2c3e50', whiteSpace: 'pre-wrap', marginBottom: '1.5rem' }}>
-                                {c.notes || 'No proceeding notes available for this hearing.'}
-                            </div>
-
-                            <div style={{ backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '4px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>
-                                    <span style={{ fontSize: '0.8rem', color: '#64748b', fontFamily: 'var(--font-sans)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Next Hearing</span>
-                                    <div style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--color-navy)' }}>Jan 24, 2025</div>
-                                </div>
-                                <div>
-                                    <span style={{ fontSize: '0.8rem', color: '#64748b', fontFamily: 'var(--font-sans)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current Stage</span>
-                                    <div style={{ fontSize: '1rem', fontWeight: 500 }}>{c.current_stage}</div>
-                                </div>
-                                <button onClick={() => alert('Editing Note...')} className="btn" style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}>
-                                    <PenTool size={14} style={{ marginRight: '0.5rem' }} /> Edit Note
-                                </button>
-                            </div>
-                        </div>
-                    )) : (
-                        <div className="paper" style={{ textAlign: 'center', padding: '3rem' }}>
-                            <BookOpen size={48} opacity={0.2} style={{ marginBottom: '1rem' }} />
-                            <h3 style={{ color: '#888' }}>No Cases Found</h3>
-                            <p style={{ color: '#999' }}>Click "+ Add New Entry" to create a case file.</p>
-                        </div>
-                    )}
-                </main>
-
+            {/* Calendar Strip (Simplified) */}
+            <div className="paper" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <button className="btn"><ChevronLeft size={20} /></button>
+                <div style={{ textAlign: 'center' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--color-navy)' }}>Monday, 16 Dec 2024</h3>
+                    <span style={{ fontSize: '0.9rem', color: '#666' }}>Today</span>
+                </div>
+                <button className="btn"><ChevronRight size={20} /></button>
             </div>
 
-            {/* Modal */}
-            {showModal && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
-                }}>
-                    <div className="paper" style={{ width: '500px', padding: '2rem', position: 'relative' }}>
-                        <button onClick={() => setShowModal(false)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', cursor: 'pointer' }}>
-                            <X size={24} color="#666" />
-                        </button>
-
-                        <h2 style={{ marginTop: 0, color: 'var(--color-navy)', fontSize: '1.5rem' }}>New Case Entry</h2>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1.5rem' }}>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Court</label>
-                                <select
-                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', border: '1px solid #ccc' }}
-                                    value={newCase.court_name}
-                                    onChange={(e) => setNewCase({ ...newCase, court_name: e.target.value })}
-                                >
-                                    <option>High Court of Delhi</option>
-                                    <option>Supreme Court of India</option>
-                                    <option>Patiala House District Court</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Case Number</label>
-                                <input
-                                    type="text"
-                                    placeholder="e.g. WP(C) 1234/2024"
-                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', border: '1px solid #ccc' }}
-                                    value={newCase.case_number}
-                                    onChange={(e) => setNewCase({ ...newCase, case_number: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Case Title / Parties</label>
-                                <input
-                                    type="text"
-                                    placeholder="e.g. State vs. Rajiv Kumar"
-                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', border: '1px solid #ccc' }}
-                                    value={newCase.title}
-                                    onChange={(e) => setNewCase({ ...newCase, title: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Stage</label>
-                                <input
-                                    type="text"
-                                    placeholder="e.g. Admission"
-                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '4px', border: '1px solid #ccc' }}
-                                    value={newCase.stage}
-                                    onChange={(e) => setNewCase({ ...newCase, stage: e.target.value })}
-                                />
+            {/* Case List */}
+            {loading ? (
+                <div>Loading...</div>
+            ) : (
+                <div style={{ display: 'grid', gap: '1.5rem' }}>
+                    {cases.map((c) => (
+                        <div key={c.id} className="paper" style={{ display: 'grid', gridTemplateColumns: '80px 1fr 200px 50px', alignItems: 'center', gap: '1.5rem', transition: 'transform 0.2s', padding: '1.5rem' }}>
+                            <div style={{ textAlign: 'center', paddingRight: '1.5rem', borderRight: '1px solid #eee' }}>
+                                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-navy)' }}>{c.time.split(' ')[0]}</div>
+                                <div style={{ fontSize: '0.8rem', color: '#888', textTransform: 'uppercase' }}>{c.time.split(' ')[1]}</div>
                             </div>
 
-                            <button onClick={handleSave} className="btn btn-primary" style={{ marginTop: '1rem', justifyContent: 'center', padding: '1rem' }}>
-                                Save Case File
-                            </button>
+                            <div>
+                                <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.2rem', color: '#334155' }}>
+                                    {c.title} <span style={{ fontSize: '0.85rem', fontWeight: 400, color: '#94a3b8', marginLeft: '0.5rem' }}>({c.caseNo})</span>
+                                </h3>
+                                <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.9rem', color: '#64748b' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center' }}><MapPin size={14} style={{ marginRight: '4px' }} /> {c.court}</div>
+                                    <div style={{ display: 'flex', alignItems: 'center' }}><Clock size={14} style={{ marginRight: '4px' }} /> {c.type}</div>
+                                </div>
+                                {c.notes && (
+                                    <div style={{ marginTop: '0.75rem', fontSize: '0.9rem', backgroundColor: '#fffbeb', padding: '0.5rem', borderRadius: '4px', borderLeft: '3px solid #fcd34d', color: '#b45309', display: 'flex', justifyContent: 'space-between' }}>
+                                        <span>📝 {c.notes}</span>
+                                        <button onClick={() => handleEditClick(c)} style={{ border: 'none', background: 'none', color: '#b45309', cursor: 'pointer', textDecoration: 'underline', fontSize: '0.8rem' }}>Edit Note</button>
+                                    </div>
+                                )}
+                                {!c.notes && (
+                                    <button onClick={() => handleEditClick(c)} style={{ marginTop: '0.5rem', border: 'none', background: 'none', color: '#64748b', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center' }}>+ Add Note</button>
+                                )}
+                            </div>
+
+                            <div style={{ textAlign: 'right' }}>
+                                <span style={{
+                                    padding: '4px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600,
+                                    backgroundColor: c.stage === 'Arguments' ? '#e0f2fe' : '#f0fdf4',
+                                    color: c.stage === 'Arguments' ? '#0369a1' : '#15803d'
+                                }}>
+                                    {c.stage}
+                                </span>
+                            </div>
+
+                            <div style={{ textAlign: 'right' }}>
+                                <button className="btn" style={{ padding: '0.5rem' }}><MoreVertical size={18} color="#94a3b8" /></button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Add/Edit Modal */}
+            {(isModalOpen || isEditModalOpen) && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+                    <div className="paper" style={{ width: '500px', padding: '2rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                            <h2 style={{ margin: 0 }}>{isEditModalOpen ? 'Edit Case Note' : 'Add New Case Entry'}</h2>
+                            <button onClick={() => { setIsModalOpen(false); setIsEditModalOpen(false); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {/* If Editing, only show Notes (or all fields? user asked to 'edit note', let's show all for flexibility but focus on note) */}
+                            {isEditModalOpen ? (
+                                <>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Case Note / Tasks</label>
+                                        <textarea
+                                            value={editingCase.notes || ''}
+                                            onChange={(e) => setEditingCase({ ...editingCase, notes: e.target.value })}
+                                            style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', minHeight: '100px' }}
+                                        />
+                                    </div>
+                                    <button onClick={handleSaveEdit} className="btn btn-primary" style={{ marginTop: '1rem' }}>Save Changes</button>
+                                </>
+                            ) : (
+                                <>
+                                    <input placeholder="Case Title (e.g. State vs X)" value={newCase.title} onChange={e => setNewCase({ ...newCase, title: e.target.value })} style={{ padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }} />
+                                    <input placeholder="Case Number" value={newCase.caseNo} onChange={e => setNewCase({ ...newCase, caseNo: e.target.value })} style={{ padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }} />
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                        <input placeholder="Court" value={newCase.court} onChange={e => setNewCase({ ...newCase, court: e.target.value })} style={{ padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }} />
+                                        <input type="time" value={newCase.time} onChange={e => setNewCase({ ...newCase, time: e.target.value })} style={{ padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }} />
+                                    </div>
+                                    <button onClick={handleAddCase} className="btn btn-primary" style={{ marginTop: '1rem' }}>Add to Diary</button>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

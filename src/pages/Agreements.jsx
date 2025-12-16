@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, History, Download, Eye, Plus, CheckCircle, UploadCloud, Search, ShieldAlert, MessageSquare } from 'lucide-react';
 
@@ -8,10 +8,33 @@ const Agreements = () => {
     const [analysisFile, setAnalysisFile] = useState(null);
     const [analysisResult, setAnalysisResult] = useState(null);
     const [isScanning, setIsScanning] = useState(false);
+    const [chatMessages, setChatMessages] = useState([]);
+    const [chatInput, setChatInput] = useState('');
+
     const fileInputRef = React.useRef(null);
 
     const onUploadClick = () => {
         fileInputRef.current.click();
+    };
+
+    const handleAsk = () => {
+        if (!chatInput.trim()) return;
+        const newMsg = { role: 'user', text: chatInput };
+        setChatMessages([...chatMessages, newMsg]);
+        setChatInput('');
+
+        // Sim response
+        setTimeout(() => {
+            setChatMessages(prev => [...prev, { role: 'ai', text: "Based on the agreement, the termination clause requires a 30-day notice period. However, it does not specify penalties for early termination." }]);
+        }, 1000);
+    };
+
+    const handlePreview = (doc) => {
+        alert(`Opening PDF Preview for: ${doc.title}\n(Simulated Viewer in Demo Mode)`);
+    };
+
+    const handleDownload = (doc) => {
+        alert(`Downloading ${doc.title}...\n(Simulated Download in Demo Mode)`);
     };
 
     const handleFileChange = (e) => {
@@ -20,9 +43,10 @@ const Agreements = () => {
 
         setAnalysisFile(file);
         setIsScanning(true);
-        setAnalysisResult(null); // Reset previous results
+        setAnalysisResult(null);
+        setChatMessages([]);
 
-        // Simulate AI Processing Time
+        // Simulate AI Processing
         setTimeout(() => {
             setIsScanning(false);
             setAnalysisResult({
@@ -42,8 +66,6 @@ const Agreements = () => {
         { id: 'AG-2024-002', title: 'Commercial Lease Deed', client: 'Mr. Rajesh Verma', updated: '14 Dec 2024', status: 'Internal Review', version: 'v1.0' },
         { id: 'AG-2023-089', title: 'Shareholders Agreement', client: 'Innovate Pvt Ltd', updated: '20 Nov 2024', status: 'Executed', version: 'FINAL' },
     ];
-
-    // handleFileUpload is removed as per instructions
 
     return (
         <div>
@@ -125,12 +147,34 @@ const Agreements = () => {
                                     <MessageSquare size={18} color="var(--color-navy)" />
                                     <strong style={{ color: 'var(--color-navy)' }}>Chat with Document</strong>
                                 </div>
-                                <div style={{ flex: 1, backgroundColor: '#f9f9f9', borderRadius: '4px', padding: '1rem', marginBottom: '1rem', color: '#666', fontStyle: 'italic', fontSize: '0.9rem' }}>
-                                    Ask questions like "What are the termination clauses?" or "Is there a non-compete?"...
+                                <div style={{ flex: 1, backgroundColor: '#f9f9f9', borderRadius: '4px', padding: '1rem', marginBottom: '1rem', color: '#666', fontSize: '0.9rem', overflowY: 'auto', maxHeight: '200px' }}>
+                                    {chatMessages.length === 0 ? (
+                                        <em style={{ color: '#999' }}>Ask questions like "What are the termination clauses?" or "Is there a non-compete?"...</em>
+                                    ) : (
+                                        chatMessages.map((msg, idx) => (
+                                            <div key={idx} style={{ marginBottom: '0.5rem', textAlign: msg.role === 'user' ? 'right' : 'left' }}>
+                                                <div style={{
+                                                    display: 'inline-block', padding: '0.5rem 0.75rem', borderRadius: '8px',
+                                                    backgroundColor: msg.role === 'user' ? '#e0f2fe' : '#fff',
+                                                    color: msg.role === 'user' ? '#0369a1' : '#333',
+                                                    border: msg.role === 'user' ? '1px solid #bae6fd' : '1px solid #ddd'
+                                                }}>
+                                                    {msg.text}
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                    <input type="text" placeholder="Ask a question..." style={{ flex: 1, padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }} />
-                                    <button className="btn btn-primary">Ask</button>
+                                    <input
+                                        type="text"
+                                        value={chatInput}
+                                        onChange={(e) => setChatInput(e.target.value)}
+                                        placeholder="Ask a question..."
+                                        style={{ flex: 1, padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                                        onKeyPress={(e) => e.key === 'Enter' && handleAsk()}
+                                    />
+                                    <button onClick={handleAsk} className="btn btn-primary">Ask</button>
                                 </div>
                             </div>
                         )}
@@ -221,8 +265,8 @@ const Agreements = () => {
                                     <td style={{ padding: '1rem', textAlign: 'right' }}>
                                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                                             <button onClick={() => alert('Opening Version History Log...')} className="btn" style={{ padding: '0.4rem', color: '#64748b' }} title="View Version History"><History size={16} /></button>
-                                            <button onClick={() => alert('Opening Preview Modal...')} className="btn" style={{ padding: '0.4rem', color: '#64748b' }} title="Preview"><Eye size={16} /></button>
-                                            <button onClick={() => alert('Downloading PDF...')} className="btn" style={{ padding: '0.4rem', color: '#64748b' }} title="Download"><Download size={16} /></button>
+                                            <button onClick={() => handlePreview(doc)} className="btn" style={{ padding: '0.4rem', color: '#64748b' }} title="Preview"><Eye size={16} /></button>
+                                            <button onClick={() => handleDownload(doc)} className="btn" style={{ padding: '0.4rem', color: '#64748b' }} title="Download"><Download size={16} /></button>
                                         </div>
                                     </td>
                                 </tr>
@@ -233,23 +277,21 @@ const Agreements = () => {
             )}
 
             {/* Version Control Alert Sim */}
-            {
-                activeTab !== 'review' && (
-                    <div style={{ marginTop: '2rem', maxWidth: '600px' }}>
-                        <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '4px', padding: '1rem', display: 'flex', gap: '1rem' }}>
-                            <CheckCircle size={20} color="#2563eb" style={{ marginTop: '2px' }} />
-                            <div>
-                                <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.95rem', color: '#1e40af' }}>Version Control Active</h4>
-                                <p style={{ margin: 0, fontSize: '0.85rem', color: '#1e3a8a', lineHeight: '1.5' }}>
-                                    Every edit made to an agreement is tracked with timestamp and user ID.
-                                    Use the "History" button to revert to previous versions or compare changes (Delta View).
-                                </p>
-                            </div>
+            {activeTab !== 'review' && (
+                <div style={{ marginTop: '2rem', maxWidth: '600px' }}>
+                    <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '4px', padding: '1rem', display: 'flex', gap: '1rem' }}>
+                        <CheckCircle size={20} color="#2563eb" style={{ marginTop: '2px' }} />
+                        <div>
+                            <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.95rem', color: '#1e40af' }}>Version Control Active</h4>
+                            <p style={{ margin: 0, fontSize: '0.85rem', color: '#1e3a8a', lineHeight: '1.5' }}>
+                                Every edit made to an agreement is tracked with timestamp and user ID.
+                                Use the "History" button to revert to previous versions or compare changes (Delta View).
+                            </p>
                         </div>
                     </div>
-                )
-            }
-        </div >
+                </div>
+            )}
+        </div>
     );
 };
 
