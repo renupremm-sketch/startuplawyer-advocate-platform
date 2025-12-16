@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, MoreVertical, Plus, Search, ChevronLeft, ChevronRight, X, Mic, MicOff } from 'lucide-react';
+import { Calendar, Clock, MapPin, MoreVertical, Plus, Search, ChevronLeft, ChevronRight, X, Mic, MicOff, Edit, Trash2 } from 'lucide-react';
 
 const CaseDiary = () => {
     const [cases, setCases] = useState([]);
@@ -9,6 +9,9 @@ const CaseDiary = () => {
     const [newCase, setNewCase] = useState({ title: '', caseNo: '', court: '', time: '', type: 'Hearing', stage: 'Arguments' });
     const [editingCase, setEditingCase] = useState(null);
     const [isRecording, setIsRecording] = useState(false);
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [openMenuId, setOpenMenuId] = useState(null);
 
     // Initial Load - Demo Data
     useEffect(() => {
@@ -38,6 +41,14 @@ const CaseDiary = () => {
     const handleEditClick = (c) => {
         setEditingCase({ ...c });
         setIsEditModalOpen(true);
+        setOpenMenuId(null);
+    };
+
+    const handleDeleteCase = (caseId) => {
+        const updatedCases = cases.filter(c => c.id !== caseId);
+        setCases(updatedCases);
+        localStorage.setItem('demo_cases', JSON.stringify(updatedCases));
+        setOpenMenuId(null);
     };
 
     const handleSaveEdit = () => {
@@ -49,12 +60,17 @@ const CaseDiary = () => {
     };
 
     const jumpToDate = () => {
-        alert("Date picker would open here. (Demo Mode)");
+        setShowDatePicker(!showDatePicker);
+    };
+
+    const handleDateChange = (direction) => {
+        const newDate = new Date(selectedDate);
+        newDate.setDate(newDate.getDate() + direction);
+        setSelectedDate(newDate);
     };
 
     const handleVoiceRecord = () => {
         setIsRecording(true);
-        // Simulate Recording Delay then Transcribe
         setTimeout(() => {
             setIsRecording(false);
             setNewCase({
@@ -67,7 +83,12 @@ const CaseDiary = () => {
                 notes: 'Transcribed: Client called regarding urgent stay matter. Needs filing by tomorrow morning.'
             });
             setIsModalOpen(true);
-        }, 3000); // 3 seconds "recording"
+        }, 3000);
+    };
+
+    const formatDate = (date) => {
+        const options = { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' };
+        return date.toLocaleDateString('en-IN', options);
     };
 
     return (
@@ -91,7 +112,7 @@ const CaseDiary = () => {
                             <><Mic size={16} style={{ marginRight: '0.5rem' }} /> Voice Entry</>
                         )}
                     </button>
-                    <button onClick={jumpToDate} className="btn" style={{ backgroundColor: '#fff', border: '1px solid var(--color-border)' }}>
+                    <button onClick={jumpToDate} className="btn" style={{ backgroundColor: '#fff', border: '1px solid var(--color-border)', position: 'relative' }}>
                         <Calendar size={16} style={{ marginRight: '0.5rem' }} /> Jump to Date
                     </button>
                     <button onClick={() => setIsModalOpen(true)} className="btn btn-primary">
@@ -100,14 +121,37 @@ const CaseDiary = () => {
                 </div>
             </header>
 
-            {/* Calendar Strip (Simplified) */}
-            <div className="paper" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <button className="btn"><ChevronLeft size={20} /></button>
-                <div style={{ textAlign: 'center' }}>
-                    <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--color-navy)' }}>Monday, 16 Dec 2024</h3>
-                    <span style={{ fontSize: '0.9rem', color: '#666' }}>Today</span>
+            {/* Date Picker Modal */}
+            {showDatePicker && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }} onClick={() => setShowDatePicker(false)}>
+                    <div className="paper" style={{ width: '350px', padding: '2rem' }} onClick={(e) => e.stopPropagation()}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                            <h2 style={{ margin: 0 }}>Select Date</h2>
+                            <button onClick={() => setShowDatePicker(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+                        </div>
+                        <input
+                            type="date"
+                            value={selectedDate.toISOString().split('T')[0]}
+                            onChange={(e) => {
+                                setSelectedDate(new Date(e.target.value));
+                                setShowDatePicker(false);
+                            }}
+                            style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', fontSize: '1rem' }}
+                        />
+                    </div>
                 </div>
-                <button className="btn"><ChevronRight size={20} /></button>
+            )}
+
+            {/* Calendar Strip */}
+            <div className="paper" style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <button onClick={() => handleDateChange(-1)} className="btn"><ChevronLeft size={20} /></button>
+                <div style={{ textAlign: 'center' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--color-navy)' }}>{formatDate(selectedDate)}</h3>
+                    <span style={{ fontSize: '0.9rem', color: '#666' }}>
+                        {selectedDate.toDateString() === new Date().toDateString() ? 'Today' : ''}
+                    </span>
+                </div>
+                <button onClick={() => handleDateChange(1)} className="btn"><ChevronRight size={20} /></button>
             </div>
 
             {/* Case List */}
@@ -116,7 +160,7 @@ const CaseDiary = () => {
             ) : (
                 <div style={{ display: 'grid', gap: '1.5rem' }}>
                     {cases.map((c) => (
-                        <div key={c.id} className="paper" style={{ display: 'grid', gridTemplateColumns: '80px 1fr 200px 50px', alignItems: 'center', gap: '1.5rem', transition: 'transform 0.2s', padding: '1.5rem' }}>
+                        <div key={c.id} className="paper" style={{ display: 'grid', gridTemplateColumns: '80px 1fr 200px 50px', alignItems: 'center', gap: '1.5rem', transition: 'transform 0.2s', padding: '1.5rem', position: 'relative' }}>
                             <div style={{ textAlign: 'center', paddingRight: '1.5rem', borderRight: '1px solid #eee' }}>
                                 <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-navy)' }}>{c.time.split(' ')[0]}</div>
                                 <div style={{ fontSize: '0.8rem', color: '#888', textTransform: 'uppercase' }}>{c.time.split(' ')[1]}</div>
@@ -131,13 +175,9 @@ const CaseDiary = () => {
                                     <div style={{ display: 'flex', alignItems: 'center' }}><Clock size={14} style={{ marginRight: '4px' }} /> {c.type}</div>
                                 </div>
                                 {c.notes && (
-                                    <div style={{ marginTop: '0.75rem', fontSize: '0.9rem', backgroundColor: '#fffbeb', padding: '0.5rem', borderRadius: '4px', borderLeft: '3px solid #fcd34d', color: '#b45309', display: 'flex', justifyContent: 'space-between' }}>
+                                    <div style={{ marginTop: '0.75rem', fontSize: '0.9rem', backgroundColor: '#fffbeb', padding: '0.5rem', borderRadius: '4px', borderLeft: '3px solid #fcd34d', color: '#b45309' }}>
                                         <span>📝 {c.notes}</span>
-                                        <button onClick={() => handleEditClick(c)} style={{ border: 'none', background: 'none', color: '#b45309', cursor: 'pointer', textDecoration: 'underline', fontSize: '0.8rem' }}>Edit Note</button>
                                     </div>
-                                )}
-                                {!c.notes && (
-                                    <button onClick={() => handleEditClick(c)} style={{ marginTop: '0.5rem', border: 'none', background: 'none', color: '#64748b', cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center' }}>+ Add Note</button>
                                 )}
                             </div>
 
@@ -152,7 +192,68 @@ const CaseDiary = () => {
                             </div>
 
                             <div style={{ textAlign: 'right' }}>
-                                <button className="btn" style={{ padding: '0.5rem' }}><MoreVertical size={18} color="#94a3b8" /></button>
+                                <button
+                                    onClick={() => setOpenMenuId(openMenuId === c.id ? null : c.id)}
+                                    className="btn"
+                                    style={{ padding: '0.5rem' }}
+                                >
+                                    <MoreVertical size={18} color="#94a3b8" />
+                                </button>
+
+                                {/* Dropdown Menu */}
+                                {openMenuId === c.id && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '100%',
+                                        right: '2rem',
+                                        marginTop: '0.5rem',
+                                        backgroundColor: 'white',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                        borderRadius: '8px',
+                                        overflow: 'hidden',
+                                        zIndex: 10,
+                                        minWidth: '150px'
+                                    }}>
+                                        <button
+                                            onClick={() => handleEditClick(c)}
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.75rem 1rem',
+                                                border: 'none',
+                                                background: 'none',
+                                                textAlign: 'left',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                fontSize: '0.9rem',
+                                                color: '#334155'
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                        >
+                                            <Edit size={16} style={{ marginRight: '0.5rem' }} /> Edit Note
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteCase(c.id)}
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.75rem 1rem',
+                                                border: 'none',
+                                                background: 'none',
+                                                textAlign: 'left',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                fontSize: '0.9rem',
+                                                color: '#ef4444'
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                        >
+                                            <Trash2 size={16} style={{ marginRight: '0.5rem' }} /> Delete
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))}
@@ -169,7 +270,6 @@ const CaseDiary = () => {
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            {/* If Editing, only show Notes (or all fields? user asked to 'edit note', let's show all for flexibility but focus on note) */}
                             {isEditModalOpen ? (
                                 <>
                                     <div>
