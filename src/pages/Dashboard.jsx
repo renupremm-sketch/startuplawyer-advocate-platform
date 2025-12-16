@@ -1,0 +1,155 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, Clock, AlertCircle } from 'lucide-react';
+
+const Dashboard = () => {
+  const navigate = useNavigate();
+  const [cases, setCases] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/cases')
+      .then(res => res.json())
+      .then(data => {
+        if (data.data) setCases(data.data);
+      })
+      .catch(err => console.error("Failed to fetch cases", err));
+  }, []);
+
+  return (
+    <div>
+      <header style={{ marginBottom: '2.5rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '1rem' }}>
+        <h1 style={{ fontSize: '2.2rem', color: 'var(--color-navy)', marginBottom: '0.5rem' }}>Chamber Dashboard</h1>
+        <p style={{ fontFamily: 'var(--font-sans)', color: 'var(--color-text-secondary)' }}>
+          Monday, 16 December 2024 • High Court of Delhi
+        </p>
+      </header>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+
+        {/* Left Column: Cause List & Diary */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+
+          {/* Today's Cause List */}
+          <section className="paper" style={{ padding: '0' }}>
+            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--color-border)', backgroundColor: '#fcfbf9' }}>
+              <h2 style={{ fontSize: '1.25rem', marginBottom: 0, display: 'flex', alignItems: 'center' }}>
+                <Calendar size={20} style={{ marginRight: '0.75rem', color: 'var(--color-navy)' }} />
+                Today's Cause List
+              </h2>
+            </div>
+            <div style={{ padding: '0' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-sans)', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f5f5f5', borderBottom: '1px solid #ddd', textAlign: 'left' }}>
+                    <th style={{ padding: '1rem', width: '20%' }}>Court</th>
+                    <th style={{ padding: '1rem', width: '35%' }}>Case Details</th>
+                    <th style={{ padding: '1rem', width: '25%' }}>Status</th>
+                    <th style={{ padding: '1rem', width: '20%' }}>Stage</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cases.length > 0 ? cases.map((row, i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
+                      <td style={{ padding: '1rem', verticalAlign: 'top', fontWeight: 600, color: 'var(--color-navy)' }}>{row.court_name}</td>
+                      <td style={{ padding: '1rem', verticalAlign: 'top' }}>
+                        <div style={{ fontWeight: 600 }}>{row.case_number_original}</div>
+                        <div style={{ color: '#666', marginTop: '4px' }}>{row.title}</div>
+                      </td>
+                      <td style={{ padding: '1rem', verticalAlign: 'top', fontStyle: 'italic', color: '#555' }}>
+                        {row.status}
+                      </td>
+                      <td style={{ padding: '1rem', verticalAlign: 'top' }}>
+                        <span style={{
+                          padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 500,
+                          backgroundColor: '#e0f2fe',
+                          color: '#075985'
+                        }}>
+                          {row.current_stage}
+                        </span>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan="4" style={{ padding: '2rem', textAlign: 'center' }}>Loading Cases from Server...</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* Recent Orders (Case Diary) */}
+          <section className="paper">
+            <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center' }}>
+              <Clock size={20} style={{ marginRight: '0.75rem' }} />
+              Daily Proceedings Notes
+            </h2>
+            <div style={{ fontFamily: 'var(--font-serif)', lineHeight: '1.6', color: '#333' }}>
+              <div style={{ marginBottom: '1.5rem', borderLeft: '3px solid var(--color-gold)', paddingLeft: '1rem' }}>
+                <div style={{ fontSize: '0.85rem', color: '#666', fontFamily: 'var(--font-sans)', marginBottom: '0.25rem' }}>
+                  Yesterday • WP(C) 1234/2024
+                </div>
+                <p style={{ margin: 0 }}>
+                  <strong>Hon'ble Justice Singh:</strong> Matter reached at 2:30 PM. Arguments heard on maintainability.
+                  Opposing counsel sought time to file counter-affidavit. <br />
+                  <em>Order:</em> Listed for 24th Jan 2025. Reply to be filed within 2 weeks. Interim stay continues.
+                </p>
+              </div>
+              <div style={{ borderLeft: '3px solid var(--color-border)', paddingLeft: '1rem' }}>
+                <div style={{ fontSize: '0.85rem', color: '#666', fontFamily: 'var(--font-sans)', marginBottom: '0.25rem' }}>
+                  Yesterday • CS(OS) 567/2023
+                </div>
+                <p style={{ margin: 0 }}>
+                  Adjourned due to lack of time. Bench did not sit post-lunch.
+                </p>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        {/* Right Column: Actions & Alerts */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+
+          <section className="paper" style={{ backgroundColor: '#fff', borderTop: '4px solid #b91c1c' }}>
+            <h3 style={{ fontSize: '1.1rem', marginTop: 0, marginBottom: '1rem', color: '#b91c1c', display: 'flex', alignItems: 'center' }}>
+              <AlertCircle size={18} style={{ marginRight: '0.5rem' }} />
+              Urgent Attentions
+            </h3>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontFamily: 'var(--font-sans)', fontSize: '0.9rem' }}>
+              <li style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #eee' }}>
+                <strong>Written Statement Deadline</strong><br />
+                <span style={{ color: '#666' }}>Sharma vs State • Due Tomorrow</span>
+              </li>
+              <li style={{ marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #eee' }}>
+                <strong>Client Meeting</strong><br />
+                <span style={{ color: '#666' }}>Mr. Verma (Property Dispute) • 4:00 PM</span>
+              </li>
+              <li>
+                <strong>Filing Objection</strong><br />
+                <span style={{ color: '#666' }}>Registry raised defect in WP 88/24</span>
+              </li>
+            </ul>
+          </section>
+
+          <section className="paper">
+            <h3 style={{ fontSize: '1.1rem', marginTop: 0, marginBottom: '1rem' }}>Quick Actions</h3>
+            <div style={{ display: 'grid', gap: '0.75rem' }}>
+              <button onClick={() => navigate('/case-diary')} className="btn" style={{ justifyContent: 'flex-start', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '4px' }}>
+                + New Case Entry
+              </button>
+              <button onClick={() => navigate('/smart-draft')} className="btn" style={{ justifyContent: 'flex-start', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '4px' }}>
+                + Draft Plaint (Template)
+              </button>
+              <button onClick={() => navigate('/research')} className="btn" style={{ justifyContent: 'flex-start', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '4px' }}>
+                + Search Case Law
+              </button>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default Dashboard;
+
