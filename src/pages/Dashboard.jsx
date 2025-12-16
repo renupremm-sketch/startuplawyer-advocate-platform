@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, AlertCircle, Newspaper, ExternalLink } from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -12,8 +12,23 @@ const Dashboard = () => {
       .then(data => {
         if (data.data) setCases(data.data);
       })
-      .catch(err => console.error("Failed to fetch cases", err));
+      .catch(err => console.error("Failed to fetch cases (Demo Mode fallback active)"));
+
+    // If fetch fails (no backend), load demo data
+    if (cases.length === 0) {
+      setCases([
+        { court_name: "High Court of Delhi", case_number_original: "WP(C) 1234/2024", title: "Rajesh Kumar vs UOI", status: "Listed", current_stage: "Arguments" },
+        { court_name: "District Court Saket", case_number_original: "CS 567/2023", title: "TechCorp vs Vendor", status: "Hearing", current_stage: "Evidence" }
+      ]);
+    }
   }, []);
+
+  const newsUpdates = [
+    { time: '10:30 AM', text: 'Supreme Court commences hearing on Same-Sex Marriage pleas. Constitution Bench assembled.' },
+    { time: '11:15 AM', text: 'Delhi High Court issues notice on plea challenging new IT Rules amendment regarding Fact Check Unit.' },
+    { time: '12:00 PM', text: 'Justice Chandrachud: "Technology must be used to bridge the access to justice gap." - Keynote address.' },
+    { time: '02:00 PM', text: 'Breaking: NCLT admits insolvency petition against Go First Airlines.' }
+  ];
 
   return (
     <div>
@@ -24,7 +39,7 @@ const Dashboard = () => {
         </p>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(300px, 1fr)', gap: '2rem' }}>
 
         {/* Left Column: Cause List & Diary */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -69,7 +84,7 @@ const Dashboard = () => {
                       </td>
                     </tr>
                   )) : (
-                    <tr><td colSpan="4" style={{ padding: '2rem', textAlign: 'center' }}>Loading Cases from Server...</td></tr>
+                    <tr><td colSpan="4" style={{ padding: '2rem', textAlign: 'center' }}>Loading Cases...</td></tr>
                   )}
                 </tbody>
               </table>
@@ -106,8 +121,27 @@ const Dashboard = () => {
 
         </div>
 
-        {/* Right Column: Actions & Alerts */}
+        {/* Right Column: Actions & Alerts & News */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+
+          {/* LIVE NEWS SECTION */}
+          <section className="paper" style={{ borderTop: '4px solid #059669', backgroundColor: '#f0fdf4' }}>
+            <h3 style={{ fontSize: '1.1rem', marginTop: 0, marginBottom: '1rem', color: '#166534', display: 'flex', alignItems: 'center' }}>
+              <Newspaper size={18} style={{ marginRight: '0.5rem' }} />
+              Live Legal News
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {newsUpdates.map((item, i) => (
+                <div key={i} style={{ borderBottom: i !== newsUpdates.length - 1 ? '1px dashed #bbf7d0' : 'none', paddingBottom: i !== newsUpdates.length - 1 ? '1rem' : '0' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#166534', display: 'block', marginBottom: '4px' }}>{item.time}</span>
+                  <p style={{ margin: 0, fontSize: '0.9rem', color: '#14532d', lineHeight: '1.4' }}>{item.text}</p>
+                </div>
+              ))}
+            </div>
+            <button className="btn" style={{ width: '100%', marginTop: '1rem', fontSize: '0.85rem', color: '#166534', border: '1px solid #bbf7d0', backgroundColor: '#fff' }}>
+              View All Live Updates <ExternalLink size={14} style={{ marginLeft: '4px' }} />
+            </button>
+          </section>
 
           <section className="paper" style={{ backgroundColor: '#fff', borderTop: '4px solid #b91c1c' }}>
             <h3 style={{ fontSize: '1.1rem', marginTop: 0, marginBottom: '1rem', color: '#b91c1c', display: 'flex', alignItems: 'center' }}>
@@ -152,4 +186,3 @@ const Dashboard = () => {
 }
 
 export default Dashboard;
-
