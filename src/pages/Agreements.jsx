@@ -1,46 +1,52 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Upload, Download, Eye, Plus, CheckCircle, UploadCloud, ShieldAlert, MessageSquare, X, List, AlertTriangle } from 'lucide-react';
+import { FileText, Upload, Shield, Briefcase, Home, Users, FileCheck, Edit3, FileSignature, UploadCloud, List, AlertTriangle, MessageSquare, X, Star } from 'lucide-react';
 
 const Agreements = () => {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('generate'); // 'generate' | 'review' | 'library'
-    const [reviewSubTab, setReviewSubTab] = useState('upload'); // 'upload' | 'summary' | 'missing' | 'qa'
+    const [currentStep, setCurrentStep] = useState('landing'); // 'landing' | 'selectType' | 'fillForm' | 'review'
+    const [selectedType, setSelectedType] = useState(null);
+    const [reviewSubTab, setReviewSubTab] = useState('upload');
     const [analysisFile, setAnalysisFile] = useState(null);
     const [analysisResult, setAnalysisResult] = useState(null);
     const [isScanning, setIsScanning] = useState(false);
     const [chatMessages, setChatMessages] = useState([]);
     const [chatInput, setChatInput] = useState('');
+    const [formData, setFormData] = useState({});
 
     const fileInputRef = React.useRef(null);
 
-    // Generate Form State
-    const [agreementType, setAgreementType] = useState('rental');
-    const [formData, setFormData] = useState({
-        landlordName: '',
-        tenantName: '',
-        propertyAddress: '',
-        monthlyRent: '',
-        securityDeposit: '',
-        state: ''
-    });
+    const agreementTypes = [
+        { id: 'nda', title: 'Non-Disclosure Agreement', desc: 'Protect confidential information between parties', icon: Shield, popular: true },
+        { id: 'employment', title: 'Employment Contract', desc: 'Formal agreement between employer and employee', icon: Briefcase, popular: true },
+        { id: 'rental', title: 'Rental / Lease Agreement', desc: 'Property rental terms compliant with state laws', icon: Home, popular: true },
+        { id: 'service', title: 'Service Agreement', desc: 'Terms for professional service delivery', icon: FileText, popular: false },
+        { id: 'partnership', title: 'Partnership Deed', desc: 'Define partnership terms and responsibilities', icon: Users, popular: false },
+        { id: 'vendor', title: 'Vendor Agreement', desc: 'Contract with suppliers and vendors', icon: FileCheck, popular: false },
+        { id: 'freelance', title: 'Freelance Contract', desc: 'Agreement for independent contractors', icon: Edit3, popular: false },
+        { id: 'mou', title: 'Memorandum of Understanding', desc: 'Preliminary agreement outlining intentions', icon: FileSignature, popular: false },
+    ];
+
+    const handleTypeSelect = (type) => {
+        setSelectedType(type);
+        setCurrentStep('fillForm');
+        // Initialize form data based on type
+        if (type.id === 'rental') {
+            setFormData({ landlordName: '', tenantName: '', propertyAddress: '', monthlyRent: '', securityDeposit: '', state: '' });
+        } else if (type.id === 'employment') {
+            setFormData({ employerName: '', employeeName: '', jobTitle: '', monthlySalary: '', startDate: '', workLocation: '' });
+        } else if (type.id === 'nda') {
+            setFormData({ party1Name: '', party2Name: '', effectiveDate: '', jurisdiction: '' });
+        }
+    };
+
+    const handleGenerateSubmit = () => {
+        alert(`Generating ${selectedType.title}...\nDetails: ${JSON.stringify(formData, null, 2)}`);
+        navigate('/smart-draft');
+    };
 
     const onUploadClick = () => {
         fileInputRef.current.click();
-    };
-
-    const handleAsk = () => {
-        if (!chatInput.trim()) return;
-        const newMsg = { role: 'user', text: chatInput };
-        setChatMessages([...chatMessages, newMsg]);
-        setChatInput('');
-
-        setTimeout(() => {
-            setChatMessages(prev => [...prev, {
-                role: 'ai',
-                text: "Based on the agreement, the termination clause requires a 30-day notice period. However, it does not specify penalties for early termination."
-            }]);
-        }, 1000);
     };
 
     const handleFileChange = (e) => {
@@ -69,140 +75,341 @@ const Agreements = () => {
                     'Data Privacy and Protection Clause'
                 ]
             });
-            setReviewSubTab('summary'); // Auto-switch to summary after upload
+            setReviewSubTab('summary');
         }, 2000);
     };
 
-    const handleGenerateSubmit = () => {
-        alert(`Generating ${agreementType} Agreement...\nDetails: ${JSON.stringify(formData, null, 2)}`);
-        navigate('/smart-draft');
+    const handleAsk = () => {
+        if (!chatInput.trim()) return;
+        const newMsg = { role: 'user', text: chatInput };
+        setChatMessages([...chatMessages, newMsg]);
+        setChatInput('');
+
+        setTimeout(() => {
+            setChatMessages(prev => [...prev, {
+                role: 'ai',
+                text: "Based on the agreement, the termination clause requires a 30-day notice period. However, it does not specify penalties for early termination."
+            }]);
+        }, 1000);
     };
 
     return (
         <div>
-            <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                <div>
-                    <h1 style={{ fontSize: '2rem', color: 'var(--color-navy)', marginBottom: '0.5rem' }}>Agreements & Contracts</h1>
-                    <p style={{ fontFamily: 'var(--font-sans)', color: 'var(--color-text-secondary)' }}>
-                        Generate compliant agreements or review existing contracts with AI.
-                    </p>
-                </div>
-            </header>
-
             <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept=".pdf,.docx,.doc,.txt" onChange={handleFileChange} />
 
-            {/* Main Tabs */}
-            <div style={{ display: 'flex', borderBottom: '2px solid #e2e8f0', marginBottom: '2rem', gap: '2rem' }}>
-                <button onClick={() => setActiveTab('generate')} style={{ background: 'none', border: 'none', padding: '1rem 0', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', fontFamily: 'var(--color-navy)', borderBottom: activeTab === 'generate' ? '3px solid var(--color-primary)' : 'none', color: activeTab === 'generate' ? 'var(--color-primary)' : '#64748b' }}>
-                    Generate Agreement
-                </button>
-                <button onClick={() => setActiveTab('review')} style={{ background: 'none', border: 'none', padding: '1rem 0', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', fontFamily: 'var(--color-navy)', borderBottom: activeTab === 'review' ? '3px solid var(--color-primary)' : 'none', color: activeTab === 'review' ? 'var(--color-primary)' : '#64748b' }}>
-                    Review Agreement
-                </button>
-                <button onClick={() => setActiveTab('library')} style={{ background: 'none', border: 'none', padding: '1rem 0', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', fontFamily: 'var(--color-navy)', borderBottom: activeTab === 'library' ? '3px solid var(--color-primary)' : 'none', color: activeTab === 'library' ? 'var(--color-primary)' : '#64748b' }}>
-                    My Agreements
-                </button>
-            </div>
-
-            {/* GENERATE TAB */}
-            {activeTab === 'generate' && (
-                <div className="paper" style={{ maxWidth: '900px', margin: '0 auto', padding: '3rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2rem' }}>
-                        <div style={{ width: '60px', height: '60px', borderRadius: '12px', backgroundColor: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '1.5rem' }}>
-                            <FileText size={28} color="#d97706" />
-                        </div>
-                        <div>
-                            <h2 style={{ fontSize: '1.8rem', margin: 0, color: '#0f172a' }}>Rental / Lease Agreement</h2>
-                            <p style={{ margin: '0.25rem 0 0 0', color: '#64748b' }}>Property rental terms compliant with state laws</p>
-                        </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gap: '1.5rem' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                            <div>
-                                <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Landlord Name <span style={{ color: '#ef4444' }}>*</span></label>
-                                <input
-                                    type="text"
-                                    placeholder="Full legal name"
-                                    value={formData.landlordName}
-                                    onChange={(e) => setFormData({ ...formData, landlordName: e.target.value })}
-                                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
-                                />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Tenant Name <span style={{ color: '#ef4444' }}>*</span></label>
-                                <input
-                                    type="text"
-                                    placeholder="Full legal name"
-                                    value={formData.tenantName}
-                                    onChange={(e) => setFormData({ ...formData, tenantName: e.target.value })}
-                                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Property Address</label>
-                            <textarea
-                                placeholder="Complete address with pin code"
-                                value={formData.propertyAddress}
-                                onChange={(e) => setFormData({ ...formData, propertyAddress: e.target.value })}
-                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none', minHeight: '100px', fontFamily: 'inherit' }}
-                            />
-                        </div>
-
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                            <div>
-                                <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Monthly Rent (₹)</label>
-                                <input
-                                    type="text"
-                                    placeholder="e.g., 25000"
-                                    value={formData.monthlyRent}
-                                    onChange={(e) => setFormData({ ...formData, monthlyRent: e.target.value })}
-                                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
-                                />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Security Deposit (₹)</label>
-                                <input
-                                    type="text"
-                                    placeholder="e.g., 50000"
-                                    value={formData.securityDeposit}
-                                    onChange={(e) => setFormData({ ...formData, securityDeposit: e.target.value })}
-                                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>State</label>
-                            <select
-                                value={formData.state}
-                                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none', backgroundColor: 'white' }}
-                            >
-                                <option value="">Select state</option>
-                                <option value="delhi">Delhi NCR</option>
-                                <option value="maharashtra">Maharashtra</option>
-                                <option value="karnataka">Karnataka</option>
-                                <option value="tamil_nadu">Tamil Nadu</option>
-                                <option value="up">Uttar Pradesh</option>
-                            </select>
-                        </div>
-
-                        <button onClick={handleGenerateSubmit} className="btn btn-primary" style={{ marginTop: '1rem', padding: '1rem 2rem', fontSize: '1.1rem' }}>
-                            Generate Agreement
+            {/* LANDING PAGE */}
+            {currentStep === 'landing' && (
+                <div style={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)', borderRadius: '16px', padding: '4rem 2rem', textAlign: 'center' }}>
+                    <h1 style={{ fontSize: '3.5rem', color: 'white', marginBottom: '1rem', fontWeight: 800 }}>
+                        AI-Powered Legal Agreements
+                    </h1>
+                    <h2 style={{ fontSize: '2.5rem', color: '#fbbf24', marginBottom: '1.5rem', fontWeight: 700 }}>
+                        for the Indian Market
+                    </h2>
+                    <p style={{ fontSize: '1.2rem', color: '#e0f2fe', maxWidth: '700px', marginBottom: '3rem', lineHeight: '1.8' }}>
+                        Generate legally compliant contracts, NDAs, and business agreements in minutes. Tailored for Indian laws and regulations.
+                    </p>
+                    <div style={{ display: 'flex', gap: '1.5rem' }}>
+                        <button
+                            onClick={() => setCurrentStep('selectType')}
+                            className="btn"
+                            style={{
+                                background: '#fbbf24',
+                                color: '#1e3a8a',
+                                fontSize: '1.2rem',
+                                padding: '1rem 2.5rem',
+                                fontWeight: 700,
+                                border: 'none',
+                                boxShadow: '0 4px 12px rgba(251, 191, 36, 0.4)'
+                            }}
+                        >
+                            <FileText size={20} style={{ marginRight: '0.75rem' }} /> Generate Agreement
+                        </button>
+                        <button
+                            onClick={() => { setCurrentStep('review'); }}
+                            className="btn"
+                            style={{
+                                background: 'transparent',
+                                color: 'white',
+                                fontSize: '1.2rem',
+                                padding: '1rem 2.5rem',
+                                fontWeight: 600,
+                                border: '2px solid white'
+                            }}
+                        >
+                            View Templates
                         </button>
                     </div>
                 </div>
             )}
 
-            {/* REVIEW TAB */}
-            {activeTab === 'review' && (
+            {/* SELECT AGREEMENT TYPE */}
+            {currentStep === 'selectType' && (
                 <div>
+                    <button onClick={() => setCurrentStep('landing')} className="btn" style={{ marginBottom: '2rem' }}>
+                        ← Back
+                    </button>
+                    <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                        <h1 style={{ fontSize: '2.5rem', margin: '0 0 1rem 0', color: '#0f172a' }}>Select Agreement Type</h1>
+                        <p style={{ fontSize: '1.1rem', color: '#64748b' }}>Choose from our library of legally vetted templates designed for Indian businesses</p>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                        {agreementTypes.map((type) => (
+                            <div
+                                key={type.id}
+                                onClick={() => handleTypeSelect(type)}
+                                className="paper"
+                                style={{
+                                    padding: '2rem',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s',
+                                    borderTop: '4px solid transparent',
+                                    position: 'relative'
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.borderTopColor = '#0ea5e9';
+                                    e.currentTarget.style.transform = 'translateY(-4px)';
+                                    e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.1)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.borderTopColor = 'transparent';
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+                                }}
+                            >
+                                {type.popular && (
+                                    <span style={{
+                                        position: 'absolute',
+                                        top: '1rem',
+                                        right: '1rem',
+                                        backgroundColor: '#fbbf24',
+                                        color: '#1e3a8a',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 700,
+                                        padding: '4px 10px',
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center'
+                                    }}>
+                                        <Star size={12} style={{ marginRight: '4px', fill: '#1e3a8a' }} /> Popular
+                                    </span>
+                                )}
+                                <div style={{
+                                    width: '60px',
+                                    height: '60px',
+                                    borderRadius: '12px',
+                                    backgroundColor: '#e0f2fe',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    marginBottom: '1.5rem'
+                                }}>
+                                    <type.icon size={28} color="#0369a1" />
+                                </div>
+                                <h3 style={{ fontSize: '1.2rem', margin: '0 0 0.75rem 0', color: '#0f172a', fontWeight: 700 }}>
+                                    {type.title}
+                                </h3>
+                                <p style={{ fontSize: '0.95rem', color: '#64748b', margin: 0, lineHeight: '1.6' }}>
+                                    {type.desc}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* FILL FORM */}
+            {currentStep === 'fillForm' && selectedType && (
+                <div>
+                    <button onClick={() => setCurrentStep('selectType')} className="btn" style={{ marginBottom: '2rem' }}>
+                        ← Back to Templates
+                    </button>
+
+                    <div className="paper" style={{ maxWidth: '900px', margin: '0 auto', padding: '3rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2rem' }}>
+                            <div style={{ width: '60px', height: '60px', borderRadius: '12px', backgroundColor: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '1.5rem' }}>
+                                <selectedType.icon size={28} color="#d97706" />
+                            </div>
+                            <div>
+                                <h2 style={{ fontSize: '1.8rem', margin: 0, color: '#0f172a' }}>{selectedType.title}</h2>
+                                <p style={{ margin: '0.25rem 0 0 0', color: '#64748b' }}>{selectedType.desc}</p>
+                            </div>
+                        </div>
+
+                        {/* Rental Agreement Form */}
+                        {selectedType.id === 'rental' && (
+                            <div style={{ display: 'grid', gap: '1.5rem' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                                    <div>
+                                        <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Landlord Name <span style={{ color: '#ef4444' }}>*</span></label>
+                                        <input
+                                            type="text"
+                                            placeholder="Full legal name"
+                                            value={formData.landlordName}
+                                            onChange={(e) => setFormData({ ...formData, landlordName: e.target.value })}
+                                            style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Tenant Name <span style={{ color: '#ef4444' }}>*</span></label>
+                                        <input
+                                            type="text"
+                                            placeholder="Full legal name"
+                                            value={formData.tenantName}
+                                            onChange={(e) => setFormData({ ...formData, tenantName: e.target.value })}
+                                            style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Property Address</label>
+                                    <textarea
+                                        placeholder="Complete address with pin code"
+                                        value={formData.propertyAddress}
+                                        onChange={(e) => setFormData({ ...formData, propertyAddress: e.target.value })}
+                                        style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none', minHeight: '100px', fontFamily: 'inherit' }}
+                                    />
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                                    <div>
+                                        <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Monthly Rent (₹)</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g., 25000"
+                                            value={formData.monthlyRent}
+                                            onChange={(e) => setFormData({ ...formData, monthlyRent: e.target.value })}
+                                            style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Security Deposit (₹)</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g., 50000"
+                                            value={formData.securityDeposit}
+                                            onChange={(e) => setFormData({ ...formData, securityDeposit: e.target.value })}
+                                            style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>State</label>
+                                    <select
+                                        value={formData.state}
+                                        onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                                        style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none', backgroundColor: 'white' }}
+                                    >
+                                        <option value="">Select state</option>
+                                        <option value="delhi">Delhi NCR</option>
+                                        <option value="maharashtra">Maharashtra</option>
+                                        <option value="karnataka">Karnataka</option>
+                                        <option value="tamil_nadu">Tamil Nadu</option>
+                                        <option value="up">Uttar Pradesh</option>
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Employment Contract Form */}
+                        {selectedType.id === 'employment' && (
+                            <div style={{ display: 'grid', gap: '1.5rem' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                                    <div>
+                                        <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Employer Name <span style={{ color: '#ef4444' }}>*</span></label>
+                                        <input
+                                            type="text"
+                                            placeholder="Company name"
+                                            value={formData.employerName}
+                                            onChange={(e) => setFormData({ ...formData, employerName: e.target.value })}
+                                            style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Employee Name <span style={{ color: '#ef4444' }}>*</span></label>
+                                        <input
+                                            type="text"
+                                            placeholder="Full legal name"
+                                            value={formData.employeeName}
+                                            onChange={(e) => setFormData({ ...formData, employeeName: e.target.value })}
+                                            style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
+                                        />
+                                    </div>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                                    <div>
+                                        <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Job Title</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g., Software Engineer"
+                                            value={formData.jobTitle}
+                                            onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
+                                            style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Monthly Salary (₹)</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g., 50000"
+                                            value={formData.monthlySalary}
+                                            onChange={(e) => setFormData({ ...formData, monthlySalary: e.target.value })}
+                                            style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
+                                        />
+                                    </div>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                                    <div>
+                                        <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Start Date</label>
+                                        <input
+                                            type="date"
+                                            placeholder="dd-mm-yyyy"
+                                            value={formData.startDate}
+                                            onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                                            style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Work Location</label>
+                                        <select
+                                            value={formData.workLocation}
+                                            onChange={(e) => setFormData({ ...formData, workLocation: e.target.value })}
+                                            style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none', backgroundColor: 'white' }}
+                                        >
+                                            <option value="">Select state</option>
+                                            <option value="delhi">Delhi NCR</option>
+                                            <option value="bangalore">Bangalore</option>
+                                            <option value="mumbai">Mumbai</option>
+                                            <option value="chennai">Chennai</option>
+                                            <option value="hyderabad">Hyderabad</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Other agreement types can have generic form */}
+                        {!['rental', 'employment'].includes(selectedType.id) && (
+                            <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
+                                <p>Form fields for {selectedType.title} will be available soon.</p>
+                            </div>
+                        )}
+
+                        <button onClick={handleGenerateSubmit} className="btn" style={{ marginTop: '2rem', width: '100%', padding: '1rem 2rem', fontSize: '1.1rem', background: '#fbbf24', color: '#1e3a8a', fontWeight: 700, border: 'none', boxShadow: '0 4px 12px rgba(251, 191, 36, 0.3)' }}>
+                            ✨ Generate Agreement with AI
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* REVIEW TAB (existing code stays the same) */}
+            {currentStep === 'review' && (
+                <div>
+                    <button onClick={() => setCurrentStep('landing')} className="btn" style={{ marginBottom: '2rem' }}>
+                        ← Back
+                    </button>
                     <p style={{ textAlign: 'center', color: '#64748b', marginBottom: '1.5rem' }}>Upload your agreement or legal document for AI-powered analysis</p>
 
-                    {/* Review Sub-Tabs */}
                     <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', backgroundColor: '#f8fafc', padding: '0.5rem', borderRadius: '12px', maxWidth: '600px', margin: '0 auto 2rem auto' }}>
                         <button onClick={() => setReviewSubTab('upload')} style={{ flex: 1, background: reviewSubTab === 'upload' ? 'white' : 'transparent', border: 'none', padding: '0.75rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: reviewSubTab === 'upload' ? 'var(--color-primary)' : '#64748b', transition: 'all 0.2s', boxShadow: reviewSubTab === 'upload' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none' }}>
                             Upload
@@ -218,7 +425,6 @@ const Agreements = () => {
                         </button>
                     </div>
 
-                    {/* Upload Sub-Tab */}
                     {reviewSubTab === 'upload' && (
                         <div className="paper" style={{ maxWidth: '900px', margin: '0 auto', padding: '3rem', textAlign: 'center' }}>
                             <div
@@ -249,7 +455,6 @@ const Agreements = () => {
                         </div>
                     )}
 
-                    {/* Summary Sub-Tab */}
                     {reviewSubTab === 'summary' && analysisResult && (
                         <div className="paper fade-in" style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem' }}>
                             <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center' }}>
@@ -261,20 +466,9 @@ const Agreements = () => {
                                     {analysisResult.summary}
                                 </p>
                             </div>
-                            <div style={{ marginTop: '2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                                <div style={{ backgroundColor: '#ecfdf5', padding: '1.5rem', borderRadius: '12px' }}>
-                                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#059669' }}>Risk Score</h4>
-                                    <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#059669' }}>{analysisResult.score}/100</div>
-                                </div>
-                                <div style={{ backgroundColor: '#fff7ed', padding: '1.5rem', borderRadius: '12px' }}>
-                                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#d97706' }}>Issues Found</h4>
-                                    <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#d97706' }}>{analysisResult.risks.length}</div>
-                                </div>
-                            </div>
                         </div>
                     )}
 
-                    {/* Missing Points Sub-Tab */}
                     {reviewSubTab === 'missing' && analysisResult && (
                         <div className="paper fade-in" style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem' }}>
                             <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center' }}>
@@ -297,17 +491,9 @@ const Agreements = () => {
                                     </div>
                                 ))}
                             </div>
-
-                            <h3 style={{ fontSize: '1.2rem', marginTop: '2rem', marginBottom: '1rem', color: '#334155' }}>Recommended Additions</h3>
-                            <ul style={{ paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                {analysisResult.missingPoints.map((point, i) => (
-                                    <li key={i} style={{ fontSize: '1rem', color: '#64748b' }}>{point}</li>
-                                ))}
-                            </ul>
                         </div>
                     )}
 
-                    {/* Q&A Sub-Tab */}
                     {reviewSubTab === 'qa' && analysisResult && (
                         <div className="paper fade-in" style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem', display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
                             <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center' }}>
@@ -319,12 +505,7 @@ const Agreements = () => {
                                 {chatMessages.length === 0 ? (
                                     <div style={{ textAlign: 'center', color: '#94a3b8', padding: '3rem' }}>
                                         <MessageSquare size={48} style={{ margin: '0 auto 1rem auto', opacity: 0.3 }} />
-                                        <p style={{ fontSize: '1rem' }}>Ask questions like:</p>
-                                        <ul style={{ listStyle: 'none', padding: 0, marginTop: '1rem' }}>
-                                            <li style={{ marginBottom: '0.5rem' }}>"What are the termination clauses?"</li>
-                                            <li style={{ marginBottom: '0.5rem' }}>"Is there a non-compete agreement?"</li>
-                                            <li>"What is the notice period?"</li>
-                                        </ul>
+                                        <p style={{ fontSize: '1rem' }}>Ask questions about the agreement</p>
                                     </div>
                                 ) : (
                                     chatMessages.map((msg, idx) => (
@@ -351,7 +532,7 @@ const Agreements = () => {
                                     type="text"
                                     value={chatInput}
                                     onChange={(e) => setChatInput(e.target.value)}
-                                    placeholder="Ask a question about the document..."
+                                    placeholder="Ask a question..."
                                     style={{ flex: 1, padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '12px', fontSize: '1rem', outline: 'none' }}
                                     onKeyPress={(e) => e.key === 'Enter' && handleAsk()}
                                 />
@@ -359,13 +540,6 @@ const Agreements = () => {
                             </div>
                         </div>
                     )}
-                </div>
-            )}
-
-            {/* LIBRARY TAB */}
-            {activeTab === 'library' && (
-                <div className="paper" style={{ padding: '2rem' }}>
-                    <p style={{ textAlign: 'center', color: '#94a3b8', padding: '3rem' }}>Your saved agreements will appear here.</p>
                 </div>
             )}
 
