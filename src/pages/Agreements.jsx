@@ -1,18 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, History, Download, Eye, Plus, CheckCircle, UploadCloud, ShieldAlert, MessageSquare, X } from 'lucide-react';
+import { FileText, Upload, Download, Eye, Plus, CheckCircle, UploadCloud, ShieldAlert, MessageSquare, X, List, AlertTriangle } from 'lucide-react';
 
 const Agreements = () => {
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('drafts');
+    const [activeTab, setActiveTab] = useState('generate'); // 'generate' | 'review' | 'library'
+    const [reviewSubTab, setReviewSubTab] = useState('upload'); // 'upload' | 'summary' | 'missing' | 'qa'
     const [analysisFile, setAnalysisFile] = useState(null);
     const [analysisResult, setAnalysisResult] = useState(null);
     const [isScanning, setIsScanning] = useState(false);
     const [chatMessages, setChatMessages] = useState([]);
     const [chatInput, setChatInput] = useState('');
-    const [summaryModal, setSummaryModal] = useState(null);
 
     const fileInputRef = React.useRef(null);
+
+    // Generate Form State
+    const [agreementType, setAgreementType] = useState('rental');
+    const [formData, setFormData] = useState({
+        landlordName: '',
+        tenantName: '',
+        propertyAddress: '',
+        monthlyRent: '',
+        securityDeposit: '',
+        state: ''
+    });
 
     const onUploadClick = () => {
         fileInputRef.current.click();
@@ -25,28 +36,11 @@ const Agreements = () => {
         setChatInput('');
 
         setTimeout(() => {
-            setChatMessages(prev => [...prev, { role: 'ai', text: "Based on the agreement, the termination clause requires a 30-day notice period. However, it does not specify penalties for early termination." }]);
+            setChatMessages(prev => [...prev, {
+                role: 'ai',
+                text: "Based on the agreement, the termination clause requires a 30-day notice period. However, it does not specify penalties for early termination."
+            }]);
         }, 1000);
-    };
-
-    const handlePreview = (doc) => {
-        alert(`Opening PDF Preview for: ${doc.title}\n(Simulated Viewer in Demo Mode)`);
-    };
-
-    const handleDownload = (doc) => {
-        alert(`Downloading ${doc.title}...\n(Simulated Download in Demo Mode)`);
-    };
-
-    const handleViewSummary = (doc) => {
-        // Mock Summaries
-        let summaryText = "";
-        switch (doc.id) {
-            case 'AG-2024-001': summaryText = "Mutual Non-Disclosure Agreement between TechCorp and Client to protect proprietary algorithms. Includes 3-year confidentiality term post-expiry. No penalty clause defined for minor breaches."; break;
-            case 'AG-2024-002': summaryText = "Commercial Lease Deed for Office Unit 504. Monthly rent: ₹1.5L. Security Deposit: 6 Months. Lock-in period: 3 Years. Force Majeure clause included."; break;
-            case 'AG-2023-089': summaryText = "Shareholders Agreement defining equity split (60-40). Includes Right of First Refusal (ROFR) and Tag-Along rights. Board composition: 2 Directors from Majority, 1 from Minority."; break;
-            default: summaryText = "Standard agreement template with basic liability protections and dispute resolution via arbitration in New Delhi.";
-        }
-        setSummaryModal({ title: doc.title, text: summaryText });
     };
 
     const handleFileChange = (e) => {
@@ -67,16 +61,22 @@ const Agreements = () => {
                     { severity: 'Medium', text: 'Termination notice period is ambiguous (undefined days).' },
                     { severity: 'Low', text: 'Governing Law not specified (Defaulting to local jurisdiction).' }
                 ],
-                summary: 'Standard service agreement. favorable to the Service Provider. Lacks standard liability caps found in similar industry contracts.'
+                summary: 'This is a standard service agreement favorable to the Service Provider. The agreement lacks standard liability caps commonly found in similar industry contracts. The payment terms are clearly defined with NET 30 days clause.',
+                missingPoints: [
+                    'Force Majeure Clause',
+                    'Dispute Resolution Mechanism (Arbitration)',
+                    'Intellectual Property Rights Assignment',
+                    'Data Privacy and Protection Clause'
+                ]
             });
+            setReviewSubTab('summary'); // Auto-switch to summary after upload
         }, 2000);
     };
 
-    const agreementList = [
-        { id: 'AG-2024-001', title: 'Non-Disclosure Agreement (Mutual)', client: 'TechCorp India', updated: '16 Dec 2024', status: 'Draft', version: 'v3.2' },
-        { id: 'AG-2024-002', title: 'Commercial Lease Deed', client: 'Mr. Rajesh Verma', updated: '14 Dec 2024', status: 'Internal Review', version: 'v1.0' },
-        { id: 'AG-2023-089', title: 'Shareholders Agreement', client: 'Innovate Pvt Ltd', updated: '20 Nov 2024', status: 'Executed', version: 'FINAL' },
-    ];
+    const handleGenerateSubmit = () => {
+        alert(`Generating ${agreementType} Agreement...\nDetails: ${JSON.stringify(formData, null, 2)}`);
+        navigate('/smart-draft');
+    };
 
     return (
         <div>
@@ -84,223 +84,288 @@ const Agreements = () => {
                 <div>
                     <h1 style={{ fontSize: '2rem', color: 'var(--color-navy)', marginBottom: '0.5rem' }}>Agreements & Contracts</h1>
                     <p style={{ fontFamily: 'var(--font-sans)', color: 'var(--color-text-secondary)' }}>
-                        Drafting, Version Control, and AI Risk Analysis.
+                        Generate compliant agreements or review existing contracts with AI.
                     </p>
-                </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button onClick={() => navigate('/drafting')} className="btn" style={{ backgroundColor: '#fff', border: '1px solid var(--color-border)' }}>
-                        <FileText size={16} style={{ marginRight: '0.5rem' }} /> Template Library
-                    </button>
-                    <button onClick={() => navigate('/smart-draft')} className="btn btn-primary">
-                        <Plus size={16} style={{ marginRight: '0.5rem' }} /> New Agreement
-                    </button>
                 </div>
             </header>
 
-            <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept=".pdf,.docx,.doc" onChange={handleFileChange} />
+            <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept=".pdf,.docx,.doc,.txt" onChange={handleFileChange} />
 
-            <div style={{ display: 'flex', borderBottom: '1px solid #e2e8f0', marginBottom: '2rem' }}>
-                <div onClick={() => setActiveTab('drafts')} style={{ padding: '1rem 2rem', cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-sans)', borderBottom: activeTab === 'drafts' ? '3px solid var(--color-navy)' : 'none', color: activeTab === 'drafts' ? 'var(--color-navy)' : '#64748b' }}>
-                    Active Drafts
-                </div>
-                <div onClick={() => setActiveTab('review')} style={{ padding: '1rem 2rem', cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-sans)', borderBottom: activeTab === 'review' ? '3px solid var(--color-navy)' : 'none', color: activeTab === 'review' ? 'var(--color-navy)' : '#64748b' }}>
-                    AI Review & Analysis
-                </div>
-                <div onClick={() => setActiveTab('executed')} style={{ padding: '1rem 2rem', cursor: 'pointer', fontWeight: 600, fontFamily: 'var(--font-sans)', borderBottom: activeTab === 'executed' ? '3px solid var(--color-navy)' : 'none', color: activeTab === 'executed' ? 'var(--color-navy)' : '#64748b' }}>
-                    Executed / Registered
-                </div>
+            {/* Main Tabs */}
+            <div style={{ display: 'flex', borderBottom: '2px solid #e2e8f0', marginBottom: '2rem', gap: '2rem' }}>
+                <button onClick={() => setActiveTab('generate')} style={{ background: 'none', border: 'none', padding: '1rem 0', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', fontFamily: 'var(--color-navy)', borderBottom: activeTab === 'generate' ? '3px solid var(--color-primary)' : 'none', color: activeTab === 'generate' ? 'var(--color-primary)' : '#64748b' }}>
+                    Generate Agreement
+                </button>
+                <button onClick={() => setActiveTab('review')} style={{ background: 'none', border: 'none', padding: '1rem 0', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', fontFamily: 'var(--color-navy)', borderBottom: activeTab === 'review' ? '3px solid var(--color-primary)' : 'none', color: activeTab === 'review' ? 'var(--color-primary)' : '#64748b' }}>
+                    Review Agreement
+                </button>
+                <button onClick={() => setActiveTab('library')} style={{ background: 'none', border: 'none', padding: '1rem 0', cursor: 'pointer', fontWeight: 600, fontSize: '1rem', fontFamily: 'var(--color-navy)', borderBottom: activeTab === 'library' ? '3px solid var(--color-primary)' : 'none', color: activeTab === 'library' ? 'var(--color-primary)' : '#64748b' }}>
+                    My Agreements
+                </button>
             </div>
 
-            {activeTab === 'review' ? (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                    {/* Left Column: Upload & Chat */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                        <div
-                            className="paper"
-                            style={{
-                                border: '2px dashed #cbd5e1',
-                                backgroundColor: isScanning ? '#f0f9ff' : '#f8fafc',
-                                padding: '3rem',
-                                textAlign: 'center',
-                                cursor: 'pointer',
-                                transition: 'all 0.3s ease'
-                            }}
-                            onClick={onUploadClick}
-                        >
-                            {isScanning ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', animation: 'fadeIn 0.5s' }}>
-                                    <div style={{ width: '40px', height: '40px', border: '3px solid #e2e8f0', borderTopColor: '#0ea5e9', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '1rem' }}></div>
-                                    <h3 style={{ margin: 0, color: '#0f172a' }}>Scanning {analysisFile?.name}...</h3>
-                                    <p style={{ color: '#0ea5e9' }}>Extracting clauses & checking risks...</p>
-                                </div>
-                            ) : (
-                                <>
-                                    <UploadCloud size={48} color="#94a3b8" style={{ marginBottom: '1rem' }} />
-                                    <h3 style={{ margin: 0, color: '#475569' }}>{analysisFile ? 'Analyze Another Document' : 'Upload Agreement for Review'}</h3>
-                                    <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>
-                                        {analysisFile ? `Last analyzed: ${analysisFile.name}` : 'Click to select PDF/DOCX'}
-                                    </p>
-                                </>
-                            )}
+            {/* GENERATE TAB */}
+            {activeTab === 'generate' && (
+                <div className="paper" style={{ maxWidth: '900px', margin: '0 auto', padding: '3rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2rem' }}>
+                        <div style={{ width: '60px', height: '60px', borderRadius: '12px', backgroundColor: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '1.5rem' }}>
+                            <FileText size={28} color="#d97706" />
                         </div>
-
-                        {(analysisFile || analysisResult) && (
-                            <div className="paper fade-in" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                <div style={{ borderBottom: '1px solid #eee', paddingBottom: '1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <MessageSquare size={18} color="var(--color-navy)" />
-                                    <strong style={{ color: 'var(--color-navy)' }}>Chat with Document</strong>
-                                </div>
-                                <div style={{ flex: 1, backgroundColor: '#f9f9f9', borderRadius: '4px', padding: '1rem', marginBottom: '1rem', color: '#666', fontSize: '0.9rem', overflowY: 'auto', maxHeight: '200px' }}>
-                                    {chatMessages.length === 0 ? (
-                                        <em style={{ color: '#999' }}>Ask questions like "What are the termination clauses?" or "Is there a non-compete?"...</em>
-                                    ) : (
-                                        chatMessages.map((msg, idx) => (
-                                            <div key={idx} style={{ marginBottom: '0.5rem', textAlign: msg.role === 'user' ? 'right' : 'left' }}>
-                                                <div style={{
-                                                    display: 'inline-block', padding: '0.5rem 0.75rem', borderRadius: '8px',
-                                                    backgroundColor: msg.role === 'user' ? '#e0f2fe' : '#fff',
-                                                    color: msg.role === 'user' ? '#0369a1' : '#333',
-                                                    border: msg.role === 'user' ? '1px solid #bae6fd' : '1px solid #ddd'
-                                                }}>
-                                                    {msg.text}
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                    <input
-                                        type="text"
-                                        value={chatInput}
-                                        onChange={(e) => setChatInput(e.target.value)}
-                                        placeholder="Ask a question..."
-                                        style={{ flex: 1, padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
-                                        onKeyPress={(e) => e.key === 'Enter' && handleAsk()}
-                                    />
-                                    <button onClick={handleAsk} className="btn btn-primary">Ask</button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Right Column: Results */}
-                    <div>
-                        {analysisResult ? (
-                            <div className="paper fade-in" style={{ borderTop: '4px solid #f59e0b' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                    <h2 style={{ fontSize: '1.25rem', margin: 0 }}>Risk Analysis Report</h2>
-                                    <span style={{ fontSize: '1.5rem', fontWeight: 700, color: analysisResult.score > 80 ? '#16a34a' : '#d97706' }}>
-                                        {analysisResult.score}/100
-                                    </span>
-                                </div>
-
-                                <div style={{ marginBottom: '2rem' }}>
-                                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#64748b' }}>Executive Summary</h4>
-                                    <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.6', color: '#333' }}>{analysisResult.summary}</p>
-                                </div>
-
-                                <div>
-                                    <h4 style={{ margin: '0 0 1rem 0', color: '#b91c1c', display: 'flex', alignItems: 'center' }}>
-                                        <ShieldAlert size={16} style={{ marginRight: '0.5rem' }} /> Missing Points & Risks
-                                    </h4>
-                                    <ul style={{ paddingLeft: '1.2rem', margin: 0 }}>
-                                        {analysisResult.risks.map((risk, i) => (
-                                            <li key={i} style={{ marginBottom: '0.75rem', fontSize: '0.9rem', color: '#333' }}>
-                                                <span style={{
-                                                    display: 'inline-block', padding: '2px 6px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, marginRight: '0.5rem',
-                                                    backgroundColor: risk.severity === 'High' ? '#fee2e2' : '#fef3c7',
-                                                    color: risk.severity === 'High' ? '#991b1b' : '#92400e'
-                                                }}>
-                                                    {risk.severity}
-                                                </span>
-                                                {risk.text}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            </div>
-                        ) : (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8', fontStyle: 'italic', minHeight: '300px' }}>
-                                {isScanning ? 'AI is analyzing the document structure...' : 'Upload a document to view AI analysis.'}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            ) : (
-                <div className="paper" style={{ padding: 0 }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-                        <thead>
-                            <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', textAlign: 'left', color: '#64748b' }}>
-                                <th style={{ padding: '1rem' }}>Agreement Title</th>
-                                <th style={{ padding: '1rem' }}>Client</th>
-                                <th style={{ padding: '1rem' }}>Last Updated</th>
-                                <th style={{ padding: '1rem' }}>Status</th>
-                                <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {agreementList.map((doc) => (
-                                <tr key={doc.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                    <td style={{ padding: '1rem' }}>
-                                        <div style={{ fontWeight: 600, color: 'var(--color-navy)', display: 'flex', alignItems: 'center' }}>
-                                            <FileText size={16} style={{ marginRight: '0.5rem', color: '#94a3b8' }} />
-                                            {doc.title}
-                                        </div>
-                                        <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginLeft: '1.5rem', marginTop: '4px' }}>Ref: {doc.id}</div>
-                                    </td>
-                                    <td style={{ padding: '1rem', color: '#333' }}>{doc.client}</td>
-                                    <td style={{ padding: '1rem', color: '#64748b' }}>{doc.updated}</td>
-                                    <td style={{ padding: '1rem' }}>
-                                        <span style={{
-                                            backgroundColor: doc.status === 'Executed' ? '#ecfdf5' : '#fff7ed',
-                                            color: doc.status === 'Executed' ? '#047857' : '#c2410c',
-                                            padding: '4px 12px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 500, border: doc.status === 'Executed' ? '1px solid #a7f3d0' : '1px solid #fed7aa'
-                                        }}>
-                                            {doc.status}
-                                        </span>
-                                    </td>
-                                    <td style={{ padding: '1rem', textAlign: 'right' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                                            <button onClick={() => handleViewSummary(doc)} className="btn" style={{ padding: '0.4rem', color: '#0369a1', backgroundColor: '#e0f2fe' }} title="AI Summary"><FileText size={16} /></button>
-                                            <button onClick={() => handlePreview(doc)} className="btn" style={{ padding: '0.4rem', color: '#64748b' }} title="Preview"><Eye size={16} /></button>
-                                            <button onClick={() => handleDownload(doc)} className="btn" style={{ padding: '0.4rem', color: '#64748b' }} title="Download"><Download size={16} /></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-
-            {activeTab !== 'review' && (
-                <div style={{ marginTop: '2rem', maxWidth: '600px' }}>
-                    <div style={{ backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '4px', padding: '1rem', display: 'flex', gap: '1rem' }}>
-                        <CheckCircle size={20} color="#2563eb" style={{ marginTop: '2px' }} />
                         <div>
-                            <h4 style={{ margin: '0 0 0.25rem 0', fontSize: '0.95rem', color: '#1e40af' }}>Version Control Active</h4>
-                            <p style={{ margin: 0, fontSize: '0.85rem', color: '#1e3a8a', lineHeight: '1.5' }}>
-                                Every edit made to an agreement is tracked with timestamp and user ID.
-                            </p>
+                            <h2 style={{ fontSize: '1.8rem', margin: 0, color: '#0f172a' }}>Rental / Lease Agreement</h2>
+                            <p style={{ margin: '0.25rem 0 0 0', color: '#64748b' }}>Property rental terms compliant with state laws</p>
                         </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gap: '1.5rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                            <div>
+                                <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Landlord Name <span style={{ color: '#ef4444' }}>*</span></label>
+                                <input
+                                    type="text"
+                                    placeholder="Full legal name"
+                                    value={formData.landlordName}
+                                    onChange={(e) => setFormData({ ...formData, landlordName: e.target.value })}
+                                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
+                                />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Tenant Name <span style={{ color: '#ef4444' }}>*</span></label>
+                                <input
+                                    type="text"
+                                    placeholder="Full legal name"
+                                    value={formData.tenantName}
+                                    onChange={(e) => setFormData({ ...formData, tenantName: e.target.value })}
+                                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Property Address</label>
+                            <textarea
+                                placeholder="Complete address with pin code"
+                                value={formData.propertyAddress}
+                                onChange={(e) => setFormData({ ...formData, propertyAddress: e.target.value })}
+                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none', minHeight: '100px', fontFamily: 'inherit' }}
+                            />
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                            <div>
+                                <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Monthly Rent (₹)</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g., 25000"
+                                    value={formData.monthlyRent}
+                                    onChange={(e) => setFormData({ ...formData, monthlyRent: e.target.value })}
+                                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
+                                />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>Security Deposit (₹)</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g., 50000"
+                                    value={formData.securityDeposit}
+                                    onChange={(e) => setFormData({ ...formData, securityDeposit: e.target.value })}
+                                    style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none' }}
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.5rem', color: '#334155' }}>State</label>
+                            <select
+                                value={formData.state}
+                                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem', outline: 'none', backgroundColor: 'white' }}
+                            >
+                                <option value="">Select state</option>
+                                <option value="delhi">Delhi NCR</option>
+                                <option value="maharashtra">Maharashtra</option>
+                                <option value="karnataka">Karnataka</option>
+                                <option value="tamil_nadu">Tamil Nadu</option>
+                                <option value="up">Uttar Pradesh</option>
+                            </select>
+                        </div>
+
+                        <button onClick={handleGenerateSubmit} className="btn btn-primary" style={{ marginTop: '1rem', padding: '1rem 2rem', fontSize: '1.1rem' }}>
+                            Generate Agreement
+                        </button>
                     </div>
                 </div>
             )}
 
-            {/* AI Summary Modal */}
-            {summaryModal && (
-                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-                    <div className="paper" style={{ width: '500px', padding: '2rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                            <h2 style={{ margin: 0, fontSize: '1.4rem' }}>{summaryModal.title}</h2>
-                            <button onClick={() => setSummaryModal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
-                        </div>
-                        <div style={{ backgroundColor: '#f9f9f9', padding: '1.5rem', borderRadius: '8px', borderLeft: '4px solid var(--color-navy)' }}>
-                            <h4 style={{ marginTop: 0, color: 'var(--color-navy)', display: 'flex', alignItems: 'center' }}><FileText size={16} style={{ marginRight: '8px' }} /> AI Generated Summary</h4>
-                            <p style={{ lineHeight: '1.6', color: '#333', fontSize: '0.95rem' }}>{summaryModal.text}</p>
-                        </div>
-                        <button onClick={() => setSummaryModal(null)} className="btn btn-primary" style={{ marginTop: '1.5rem', width: '100%' }}>Close</button>
+            {/* REVIEW TAB */}
+            {activeTab === 'review' && (
+                <div>
+                    <p style={{ textAlign: 'center', color: '#64748b', marginBottom: '1.5rem' }}>Upload your agreement or legal document for AI-powered analysis</p>
+
+                    {/* Review Sub-Tabs */}
+                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', backgroundColor: '#f8fafc', padding: '0.5rem', borderRadius: '12px', maxWidth: '600px', margin: '0 auto 2rem auto' }}>
+                        <button onClick={() => setReviewSubTab('upload')} style={{ flex: 1, background: reviewSubTab === 'upload' ? 'white' : 'transparent', border: 'none', padding: '0.75rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: reviewSubTab === 'upload' ? 'var(--color-primary)' : '#64748b', transition: 'all 0.2s', boxShadow: reviewSubTab === 'upload' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none' }}>
+                            Upload
+                        </button>
+                        <button onClick={() => setReviewSubTab('summary')} style={{ flex: 1, background: reviewSubTab === 'summary' ? 'white' : 'transparent', border: 'none', padding: '0.75rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: reviewSubTab === 'summary' ? 'var(--color-primary)' : '#64748b', transition: 'all 0.2s', boxShadow: reviewSubTab === 'summary' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none' }}>
+                            Summary
+                        </button>
+                        <button onClick={() => setReviewSubTab('missing')} style={{ flex: 1, background: reviewSubTab === 'missing' ? 'white' : 'transparent', border: 'none', padding: '0.75rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: reviewSubTab === 'missing' ? 'var(--color-primary)' : '#64748b', transition: 'all 0.2s', boxShadow: reviewSubTab === 'missing' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none' }}>
+                            Missing Points
+                        </button>
+                        <button onClick={() => setReviewSubTab('qa')} style={{ flex: 1, background: reviewSubTab === 'qa' ? 'white' : 'transparent', border: 'none', padding: '0.75rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: reviewSubTab === 'qa' ? 'var(--color-primary)' : '#64748b', transition: 'all 0.2s', boxShadow: reviewSubTab === 'qa' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none' }}>
+                            Q&A
+                        </button>
                     </div>
+
+                    {/* Upload Sub-Tab */}
+                    {reviewSubTab === 'upload' && (
+                        <div className="paper" style={{ maxWidth: '900px', margin: '0 auto', padding: '3rem', textAlign: 'center' }}>
+                            <div
+                                onClick={onUploadClick}
+                                style={{
+                                    border: '2px dashed #cbd5e1',
+                                    borderRadius: '16px',
+                                    padding: '4rem 2rem',
+                                    cursor: 'pointer',
+                                    backgroundColor: isScanning ? '#f0f9ff' : '#f8fafc',
+                                    transition: 'all 0.3s'
+                                }}
+                            >
+                                {isScanning ? (
+                                    <div>
+                                        <div style={{ width: '50px', height: '50px', border: '4px solid #e2e8f0', borderTopColor: '#0ea5e9', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 1.5rem auto' }}></div>
+                                        <h3 style={{ margin: 0, color: '#0f172a', fontSize: '1.2rem' }}>Analyzing {analysisFile?.name}...</h3>
+                                        <p style={{ color: '#0ea5e9', margin: '0.5rem 0 0 0' }}>Extracting clauses & checking risks...</p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <UploadCloud size={64} color="#64748b" style={{ margin: '0 auto 1.5rem auto' }} />
+                                        <h3 style={{ margin: 0, fontSize: '1.3rem', color: '#334155' }}>Drop your document here</h3>
+                                        <p style={{ color: '#94a3b8', fontSize: '0.95rem', margin: '0.5rem 0 0 0' }}>Supports PDF, DOC, DOCX, TXT files</p>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Summary Sub-Tab */}
+                    {reviewSubTab === 'summary' && analysisResult && (
+                        <div className="paper fade-in" style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem' }}>
+                            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center' }}>
+                                <List size={24} style={{ marginRight: '0.75rem', color: 'var(--color-primary)' }} />
+                                Document Summary
+                            </h2>
+                            <div style={{ backgroundColor: '#f8fafc', padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid var(--color-primary)' }}>
+                                <p style={{ margin: 0, fontSize: '1rem', lineHeight: '1.8', color: '#334155' }}>
+                                    {analysisResult.summary}
+                                </p>
+                            </div>
+                            <div style={{ marginTop: '2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                                <div style={{ backgroundColor: '#ecfdf5', padding: '1.5rem', borderRadius: '12px' }}>
+                                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#059669' }}>Risk Score</h4>
+                                    <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#059669' }}>{analysisResult.score}/100</div>
+                                </div>
+                                <div style={{ backgroundColor: '#fff7ed', padding: '1.5rem', borderRadius: '12px' }}>
+                                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#d97706' }}>Issues Found</h4>
+                                    <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#d97706' }}>{analysisResult.risks.length}</div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Missing Points Sub-Tab */}
+                    {reviewSubTab === 'missing' && analysisResult && (
+                        <div className="paper fade-in" style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem' }}>
+                            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center' }}>
+                                <AlertTriangle size={24} style={{ marginRight: '0.75rem', color: '#ef4444' }} />
+                                Missing Points & Risks
+                            </h2>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                {analysisResult.risks.map((risk, i) => (
+                                    <div key={i} style={{ padding: '1.25rem', backgroundColor: '#fef2f2', borderRadius: '12px', borderLeft: '4px solid #ef4444' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                            <span style={{
+                                                padding: '4px 12px', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600, marginRight: '1rem',
+                                                backgroundColor: risk.severity === 'High' ? '#fee2e2' : (risk.severity === 'Medium' ? '#fef3c7' : '#e0f2fe'),
+                                                color: risk.severity === 'High' ? '#991b1b' : (risk.severity === 'Medium' ? '#92400e' : '#075985')
+                                            }}>
+                                                {risk.severity} Risk
+                                            </span>
+                                        </div>
+                                        <p style={{ margin: 0, color: '#7f1d1d', fontSize: '1rem' }}>{risk.text}</p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <h3 style={{ fontSize: '1.2rem', marginTop: '2rem', marginBottom: '1rem', color: '#334155' }}>Recommended Additions</h3>
+                            <ul style={{ paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                {analysisResult.missingPoints.map((point, i) => (
+                                    <li key={i} style={{ fontSize: '1rem', color: '#64748b' }}>{point}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {/* Q&A Sub-Tab */}
+                    {reviewSubTab === 'qa' && analysisResult && (
+                        <div className="paper fade-in" style={{ maxWidth: '900px', margin: '0 auto', padding: '2rem', display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
+                            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center' }}>
+                                <MessageSquare size={24} style={{ marginRight: '0.75rem', color: 'var(--color-primary)' }} />
+                                Ask Questions About This Document
+                            </h2>
+
+                            <div style={{ flex: 1, backgroundColor: '#f9f9f9', borderRadius: '12px', padding: '1.5rem', marginBottom: '1.5rem', overflowY: 'auto', maxHeight: '400px' }}>
+                                {chatMessages.length === 0 ? (
+                                    <div style={{ textAlign: 'center', color: '#94a3b8', padding: '3rem' }}>
+                                        <MessageSquare size={48} style={{ margin: '0 auto 1rem auto', opacity: 0.3 }} />
+                                        <p style={{ fontSize: '1rem' }}>Ask questions like:</p>
+                                        <ul style={{ listStyle: 'none', padding: 0, marginTop: '1rem' }}>
+                                            <li style={{ marginBottom: '0.5rem' }}>"What are the termination clauses?"</li>
+                                            <li style={{ marginBottom: '0.5rem' }}>"Is there a non-compete agreement?"</li>
+                                            <li>"What is the notice period?"</li>
+                                        </ul>
+                                    </div>
+                                ) : (
+                                    chatMessages.map((msg, idx) => (
+                                        <div key={idx} style={{ marginBottom: '1rem', textAlign: msg.role === 'user' ? 'right' : 'left' }}>
+                                            <div style={{
+                                                display: 'inline-block',
+                                                padding: '1rem 1.25rem',
+                                                borderRadius: '12px',
+                                                maxWidth: '80%',
+                                                backgroundColor: msg.role === 'user' ? '#0ea5e9' : '#fff',
+                                                color: msg.role === 'user' ? '#fff' : '#333',
+                                                border: msg.role === 'user' ? 'none' : '1px solid #e2e8f0',
+                                                boxShadow: msg.role === 'ai' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
+                                            }}>
+                                                {msg.text}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                <input
+                                    type="text"
+                                    value={chatInput}
+                                    onChange={(e) => setChatInput(e.target.value)}
+                                    placeholder="Ask a question about the document..."
+                                    style={{ flex: 1, padding: '1rem', border: '1px solid #e2e8f0', borderRadius: '12px', fontSize: '1rem', outline: 'none' }}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleAsk()}
+                                />
+                                <button onClick={handleAsk} className="btn btn-primary" style={{ padding: '1rem 2rem' }}>Ask AI</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* LIBRARY TAB */}
+            {activeTab === 'library' && (
+                <div className="paper" style={{ padding: '2rem' }}>
+                    <p style={{ textAlign: 'center', color: '#94a3b8', padding: '3rem' }}>Your saved agreements will appear here.</p>
                 </div>
             )}
 
